@@ -45,22 +45,37 @@ const PARSE_SYSTEM = `동대문 원단시장 카카오톡 주문 메시지 분�
 {"customer":"고객명","phone":"전화번호 또는 null","items":[{"fabric":"원단명","color":"색상","qty":숫자}],"payment":"입금완료|미입금","address":"주소 또는 null","note":"메모 또는 null"}
 이미지인 경우 화면에서 주문 정보를 직접 읽어서 파싱하세요.`;
 
-async function aiParseText(text) {
+async function aiParseText(text, apiKey) {
+  if (!apiKey) throw new Error("API 키가 설정되지 않았습니다. 설정 탭에서 Anthropic API 키를 입력해주세요.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": apiKey,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true",
+    },
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514", max_tokens:1000,
       system: PARSE_SYSTEM,
       messages:[{role:"user",content:text}],
     }),
   });
+  if (!res.ok) throw new Error(`API 오류 (${res.status})`);
   const d = await res.json();
   return JSON.parse((d.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
 }
 
-async function aiParseImage(base64, mimeType) {
+async function aiParseImage(base64, mimeType, apiKey) {
+  if (!apiKey) throw new Error("API 키가 설정되지 않았습니다. 설정 탭에서 Anthropic API 키를 입력해주세요.");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method:"POST", headers:{"Content-Type":"application/json"},
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-api-key": apiKey,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true",
+    },
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514", max_tokens:1000,
       system: PARSE_SYSTEM,
@@ -70,9 +85,10 @@ async function aiParseImage(base64, mimeType) {
       ]}],
     }),
   });
+  if (!res.ok) throw new Error(`API 오류 (${res.status})`);
   const d = await res.json();
   return JSON.parse((d.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
 }
 
 // ── atoms ────────────────────────────────────────────────────
-export { G, SF, S, REWARDS_DATA, INIT_DATA, baseInp };
+export { G, SF, S, REWARDS_DATA, INIT_DATA, baseInp, uid, nowT, dlXlsx, sC, pC, aiParseText, aiParseImage };

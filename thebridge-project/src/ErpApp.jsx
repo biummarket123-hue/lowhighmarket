@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
-import { G, SF, S, INIT_DATA, DEFAULT_SETTINGS, DEFAULT_MANAGERS, DEFAULT_INV, STORAGE_KEYS, baseInp } from "./constants.js";
+import { G, SF, S, INIT_DATA, baseInp } from "./constants.js";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./components/UI.jsx";
 import OrderInput from "./components/OrderInput.jsx";
 import DepositTab from "./components/DepositTab.jsx";
@@ -34,7 +34,7 @@ function ErpApp() {
     {id:14,fabric:"13수 무명",color:"",stock:106},
     {id:15,fabric:"린넨코튼 15수",color:"",stock:102},
   ];
-  const DEFAULT_SETTINGS = {kakaoWebhook:"",lowStockAlert:10,kakaoEnabled:false,senderName:"로하이마켓",senderPhone:"",senderAddr:"서울 중구 동대문 원단시장"};
+  const DEFAULT_SETTINGS = {kakaoWebhook:"",lowStockAlert:10,kakaoEnabled:false,senderName:"로하이마켓",senderPhone:"",senderAddr:"서울 중구 동대문 원단시장",anthropicKey:""};
   const DEFAULT_MANAGERS = ["실장님","고문님","장부장님","송미송","김민주","손희우"];
 
   const APP_VERSION = "v2.1";
@@ -396,6 +396,7 @@ function ErpApp() {
             setTab={setTab} showToast={showToast} kakaoAlert={kakaoAlert}
             managers={managers} setManagers={setManagers}
             activeManager={activeManager} setActiveManager={setActiveManager}
+            settings={settings}
           />
         )}
 
@@ -818,6 +819,15 @@ function ErpApp() {
                 cursor:"pointer",fontFamily:S}}>
                 🔗 링크 복사
               </button>
+            </Card>
+
+            <Card style={{marginBottom:14,background:T.card,border:`1px solid ${T.border}`}}>
+              <SecTitle>AI 주문 분석</SecTitle>
+              <div style={{marginBottom:10}}>
+                <FLabel>Anthropic API Key</FLabel>
+                <input type="password" value={settings.anthropicKey||""} onChange={e=>setSettings(s=>({...s,anthropicKey:e.target.value}))} placeholder="sk-ant-..." style={baseInp}/>
+              </div>
+              <div style={{fontSize:11,color:G.creamMuted,lineHeight:1.5}}>AI 주문 분석 기능에 사용됩니다. 키는 브라우저에만 저장됩니다.</div>
             </Card>
 
             <Card style={{marginBottom:14,background:T.card,border:`1px solid ${T.border}`}}>

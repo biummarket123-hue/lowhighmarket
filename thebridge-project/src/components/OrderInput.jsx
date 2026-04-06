@@ -1,9 +1,9 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./UI.jsx";
-import { G, SF, S, REWARDS_DATA, INIT_DATA, DEFAULT_SETTINGS, DEFAULT_MANAGERS, DEFAULT_INV, STORAGE_KEYS, baseInp } from "../constants.js";
+import { G, SF, S, baseInp, aiParseText, uid, nowT } from "../constants.js";
 
-function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, setCustomers, setTab, showToast, kakaoAlert, managers, setManagers, activeManager, setActiveManager}) {
+function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, setCustomers, setTab, showToast, kakaoAlert, managers, setManagers, activeManager, setActiveManager, settings}) {
   const [newManager, setNewManager] = useState("");
   const [showManagerForm, setShowManagerForm] = useState(false);
   const [txt, setTxt] = useState("");
@@ -14,8 +14,8 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
   const parse = async () => {
     if (!txt.trim()) return;
     setParsing(true); setParsed(null); setErr("");
-    try { setParsed(await aiParseText(txt)); }
-    catch(e) { setErr("분석 실패. 다시 시도해주세요."); }
+    try { setParsed(await aiParseText(txt, settings?.anthropicKey)); }
+    catch(e) { setErr(e.message || "분석 실패. 다시 시도해주세요."); }
     finally { setParsing(false); }
   };
 
