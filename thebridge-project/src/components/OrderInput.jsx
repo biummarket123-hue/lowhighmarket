@@ -6,7 +6,7 @@ import { G, SF, S, baseInp, aiParseText, uid, nowT } from "../constants.js";
 function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, setCustomers, setTab, showToast, kakaoAlert, managers, setManagers, activeManager, setActiveManager}) {
   const [newManager, setNewManager] = useState("");
   const [showManagerForm, setShowManagerForm] = useState(false);
-  const [txt, setTxt] = useState("");
+  const [txt, setTxt] = useState("홍길동\n린넨 베이지 3마\n면 화이트 5마\n실크 네이비 2마\n\n입금완료\n배송지: 서울 중구 을지로 100");
   const [parsing, setParsing] = useState(false);
   const [parsed, setParsed] = useState(null);
   const [err, setErr] = useState("");
