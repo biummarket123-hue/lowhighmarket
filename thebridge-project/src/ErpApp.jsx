@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
-import { G, SF, S, INIT_DATA, baseInp } from "./constants.js";
+import { G, SF, S, INIT_DATA, baseInp, dlXlsx, sC, pC } from "./constants.js";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./components/UI.jsx";
 import OrderInput from "./components/OrderInput.jsx";
 import DepositTab from "./components/DepositTab.jsx";
@@ -48,7 +48,7 @@ function ErpApp() {
   const [barcodeDB, setBarcodeDB] = useState({});
   const [theme, setTheme] = useState("dark");
   const [toast, setToast] = useState({msg:"",type:"ok"});
-  const T = theme === "dark" ? G : GL;
+  const T = G;
   const [editingOrder, setEditingOrder] = useState(null);
   const [editingInv, setEditingInv] = useState(null);
   const [editingCust, setEditingCust] = useState(null);
@@ -226,7 +226,7 @@ function ErpApp() {
           <button onClick={()=>setNewerUrl(null)} style={{padding:"10px 20px",borderRadius:10,border:`1px solid ${G.border}`,background:"transparent",color:G.creamMuted,fontFamily:S,fontSize:13,cursor:"pointer"}}>
             이 버전으로 계속 사용
           </button>
-          <div style={{fontSize:10,color:G.creamMuted}}>현재: v{APP_VERSION_NUM} · 최신: v{APP_VERSION_NUM}</div>
+          <div style={{fontSize:10,color:G.creamMuted}}>현재: {APP_VERSION}</div>
         </div>
       )}
 
