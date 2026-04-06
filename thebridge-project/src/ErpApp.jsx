@@ -141,7 +141,8 @@ function ErpApp() {
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.inv, inv); },[inv,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.logs, logs); },[logs,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.customers, customers); },[customers,loaded]);
-  useEffect(()=>{ if(loaded) { save(STORAGE_KEYS.settings, settings); try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch {} } },[settings,loaded]);
+  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.settings, settings); },[settings,loaded]);
+  useEffect(()=>{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); },[settings]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.managers, managers); },[managers,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.barcodeDB, barcodeDB); },[barcodeDB,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.theme, theme); },[theme,loaded]);
