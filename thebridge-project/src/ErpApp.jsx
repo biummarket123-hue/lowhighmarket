@@ -8,15 +8,10 @@ import BarcodeTab from "./components/BarcodeTab.jsx";
 import { InoutForm, AutoShipOut } from "./components/InoutForm.jsx";
 import CustomerTab from "./components/CustomerTab.jsx";
 import ExcelImport from "./components/ExcelImport.jsx";
+import * as db from "./lib/db.js";
 
 function ErpApp() {
-  // ── 영구 저장 헬퍼 ─────────────────────────────────────────
-  const STORAGE_KEYS = {
-    orders:"bium:orders", inv:"bium:inv", logs:"bium:logs",
-    customers:"bium:customers", settings:"bium:settings",
-    managers:"bium:managers", barcodeDB:"bium:barcodeDB",
-    theme:"bium:theme",
-  };
+  // ── 기본값 ─────────────────────────────────────────────────
   const DEFAULT_INV = [
     {id:1,fabric:"린넨코튼",color:"",stock:421},
     {id:2,fabric:"린넨코튼15수",color:"",stock:251},
@@ -38,22 +33,6 @@ function ErpApp() {
   const DEFAULT_MANAGERS = ["실장님","고문님","장부장님","송미송","김민주","손희우"];
 
   const APP_VERSION = "v2.1";
-  const APP_VERSION_NUM = 2.1;
-  const SHARED = true; // 공유 스토리지 — 링크 공유 시 동일 데이터
-
-  const load = async (key, fallback) => {
-    try {
-      if (!window.storage) return fallback;
-      const r = await Promise.race([
-        window.storage.get(key, SHARED),
-        new Promise(res=>setTimeout(()=>res(null),3000))
-      ]);
-      return r && r.value ? JSON.parse(r.value) : fallback;
-    } catch { return fallback; }
-  };
-  const save = async (key, val) => {
-    try { if (window.storage) await window.storage.set(key, JSON.stringify(val), SHARED); } catch {}
-  };
 
   const [tab, setTab] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -80,72 +59,32 @@ function ErpApp() {
   const [selectMode, setSelectMode] = useState(false);
   const [activeManager, setActiveManager] = useState("");
 
-  // ── 초기 로드 ──────────────────────────────────────────────
+  // ── Supabase 초기 로드 ──────────────────────────────────────
   useEffect(()=>{
-    const timeout = setTimeout(()=>setLoaded(true), 5000);
     (async()=>{
       try {
-        // ── 버전 체크 ──────────────────────────────────
-        const storedVer = window.storage ? await Promise.race([
-          window.storage.get("bium:latest_version", true),
-          new Promise(res=>setTimeout(()=>res(null),2000))
-        ]) : null;
-        const storedUrl = window.storage ? await Promise.race([
-          window.storage.get("bium:latest_url", true),
-          new Promise(res=>setTimeout(()=>res(null),2000))
-        ]) : null;
-
-        const storedVerNum = storedVer?.value ? parseFloat(storedVer.value) : 0;
-        const currentUrl = window.location.href;
-
-        if (storedVerNum > APP_VERSION_NUM && storedUrl?.value && storedUrl.value !== currentUrl) {
-          // 구버전 — 최신 URL로 안내
-          setNewerUrl(storedUrl.value);
-          clearTimeout(timeout);
-          setLoaded(true);
-          return;
-        }
-
-        // 최신 버전이면 내 URL과 버전을 저장
-        if (storedVerNum <= APP_VERSION_NUM && window.storage) {
-          try {
-            await window.storage.set("bium:latest_version", String(APP_VERSION_NUM), true);
-            await window.storage.set("bium:latest_url", currentUrl, true);
-          } catch {}
-        }
-
-        // ── 데이터 로드 ──────────────────────────────
-        const [o,i,l,c,s,m,b,th] = await Promise.all([
-          load(STORAGE_KEYS.orders, INIT_DATA.orders),
-          load(STORAGE_KEYS.inv, DEFAULT_INV),
-          load(STORAGE_KEYS.logs, []),
-          load(STORAGE_KEYS.customers, INIT_DATA.customers.map((c,idx)=>({...c,id:idx+1}))),
-          load(STORAGE_KEYS.settings, DEFAULT_SETTINGS),
-          load(STORAGE_KEYS.managers, DEFAULT_MANAGERS),
-          load(STORAGE_KEYS.barcodeDB, {}),
-          load(STORAGE_KEYS.theme, "dark"),
+        const [o,i,l,c,m] = await Promise.all([
+          db.fetchOrders(),
+          db.fetchInventory(),
+          db.fetchLogs(),
+          db.fetchCustomers(),
+          db.fetchManagers(),
         ]);
-        setOrders(o); setInv(i); setLogs(l); setCustomers(c);
-        setSettings(prev => ({...DEFAULT_SETTINGS, ...s, ...prev})); setManagers(m); setBarcodeDB(b); setTheme(th);
+        if (o.length) setOrders(o);
+        if (i.length) setInv(i);
+        if (l.length) setLogs(l);
+        if (c.length) setCustomers(c);
+        if (m.length) setManagers(m);
       } catch(e) {
-        console.error("Storage load error:", e);
+        console.error("Supabase load error:", e);
       } finally {
-        clearTimeout(timeout);
         setLoaded(true);
       }
     })();
   },[]);
 
-  // ── 자동 저장 ──────────────────────────────────────────────
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.orders, orders); },[orders,loaded]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.inv, inv); },[inv,loaded]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.logs, logs); },[logs,loaded]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.customers, customers); },[customers,loaded]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.settings, settings); },[settings,loaded]);
+  // ── settings는 localStorage 유지 (기기별 설정) ─────────────
   useEffect(()=>{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); },[settings]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.managers, managers); },[managers,loaded]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.barcodeDB, barcodeDB); },[barcodeDB,loaded]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.theme, theme); },[theme,loaded]);
 
   const showToast = (msg, type="ok") => {
     setToast({msg,type});
@@ -231,21 +170,24 @@ function ErpApp() {
 
   const deleteItem = async () => {
     if (!confirmDel) return;
-    if (confirmDel.type==="order") setOrders(p=>p.filter(o=>o.id!==confirmDel.id));
-    if (confirmDel.type==="inv") setInv(p=>p.filter(i=>i.id!==confirmDel.id));
-    if (confirmDel.type==="log") setLogs(p=>p.filter(l=>l.id!==confirmDel.id));
-    if (confirmDel.type==="customer") setCustomers(p=>p.filter(c=>c.id!==confirmDel.id));
-    if (confirmDel.type==="reset") {
-      for(const k of Object.values(STORAGE_KEYS)) { try{await window.storage.delete(k, true);}catch{} }
-      setOrders(INIT_DATA.orders);
-      setInv(DEFAULT_INV);
-      setLogs([]);
-      setCustomers(INIT_DATA.customers.map((c,i)=>({...c,id:i+1})));
-      setSettings(DEFAULT_SETTINGS);
-      setManagers(DEFAULT_MANAGERS);
-      setBarcodeDB({});
-      showToast("전체 초기화 완료");
-    }
+    try {
+      if (confirmDel.type==="order") { await db.deleteOrder(confirmDel.id); setOrders(p=>p.filter(o=>o.id!==confirmDel.id)); }
+      if (confirmDel.type==="inv") { await db.deleteInventoryItem(confirmDel.id); setInv(p=>p.filter(i=>i.id!==confirmDel.id)); }
+      if (confirmDel.type==="log") { await db.deleteLog(confirmDel.id); setLogs(p=>p.filter(l=>l.id!==confirmDel.id)); }
+      if (confirmDel.type==="customer") { await db.deleteCustomer(confirmDel.id); setCustomers(p=>p.filter(c=>c.id!==confirmDel.id)); }
+      if (confirmDel.type==="reset") {
+        await db.clearAllData();
+        const [i,m] = await Promise.all([db.fetchInventory(), db.fetchManagers()]);
+        setOrders([]);
+        setInv(i.length ? i : DEFAULT_INV);
+        setLogs([]);
+        setCustomers([]);
+        setSettings(DEFAULT_SETTINGS);
+        setManagers(m.length ? m : DEFAULT_MANAGERS);
+        setBarcodeDB({});
+        showToast("전체 초기화 완료");
+      }
+    } catch(e) { console.error("Delete error:", e); }
     setConfirmDel(null);
     if (confirmDel.type!=="reset") showToast("삭제 완료");
   };

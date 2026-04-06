@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./UI.jsx";
-import { G, SF, S, baseInp } from "../constants.js";
+import { G, SF, S, baseInp, sC } from "../constants.js";
+import * as db from "../lib/db.js";
 
 function CustomerTab({customers, setCustomers, orders, exportCustomers, showToast, kakaoAlert, setConfirmDel, setEditingCust}) {
   const [form, setForm] = useState({name:"",phone:"",address:"",note:""});
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
 
-  const add = () => {
+  const add = async () => {
     if (!form.name.trim()) return;
     if (customers.find(c=>c.name===form.name)) { showToast("이미 등록된 고객명","error"); return; }
-    setCustomers(p=>[...p,{id:Date.now(),...form,totalOrders:0,lastOrder:"—"}]);
-    setForm({name:"",phone:"",address:"",note:""}); showToast("고객 등록 완료");
+    try {
+      const saved = await db.upsertCustomer({...form, totalOrders:0, lastOrder:"—"});
+      setCustomers(p=>[...p, saved || {id:Date.now(),...form,totalOrders:0,lastOrder:"—"}]);
+      setForm({name:"",phone:"",address:"",note:""}); showToast("고객 등록 완료");
+    } catch(e) { showToast("등록 실패","error"); }
   };
 
   const filtered = customers.filter(c=>c.name.includes(search)||(c.phone||"").includes(search));

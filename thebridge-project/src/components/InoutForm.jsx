@@ -1,36 +1,33 @@
 import { useState } from "react";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./UI.jsx";
-import { G, SF, S, baseInp } from "../constants.js";
+import { G, SF, S, baseInp, nowT, sC } from "../constants.js";
+import * as db from "../lib/db.js";
 
 function InoutForm({inv, setInv, logs, setLogs, showToast}) {
   const [f, setF] = useState({itemNo:"",fabric:"",color:"",qty:"",costPrice:"",supplier:"",note:""});
 
-  const add = () => {
+  const add = async () => {
     if (!f.fabric||!f.qty) return;
     const qty = parseFloat(f.qty)||0;
     const costPrice = parseFloat(f.costPrice)||0;
     const t = nowT();
-    setInv(p=>{
-      const ex = p.find(i=>i.fabric===f.fabric&&i.color===f.color);
-      const newItem = {
-        id:Date.now(), fabric:f.fabric, color:f.color,
-        stock:qty, itemNo:f.itemNo, costPrice,
-        supplier:f.supplier
-      };
-      if (ex) return p.map(i=>i.fabric===f.fabric&&i.color===f.color
-        ?{...i, stock:i.stock+qty, itemNo:f.itemNo||i.itemNo, costPrice:costPrice||i.costPrice, supplier:f.supplier||i.supplier}
-        :i);
-      return [...p, newItem];
-    });
-    setLogs(p=>[{
-      id:Date.now(), ...t, type:"입고",
-      fabric:f.fabric, color:f.color, qty,
-      itemNo:f.itemNo, costPrice,
-      ref:f.itemNo?`No.${f.itemNo}`:"수동입고",
-      note:[f.supplier,f.note].filter(Boolean).join(" | ")||"—"
-    },...p]);
-    setF({itemNo:"",fabric:"",color:"",qty:"",costPrice:"",supplier:"",note:""});
-    showToast("입고 등록 완료");
+    try {
+      const ex = inv.find(i=>i.fabric===f.fabric&&i.color===f.color);
+      if (ex) {
+        const updated = {...ex, stock:ex.stock+qty, itemNo:f.itemNo||ex.itemNo, costPrice:costPrice||ex.costPrice, supplier:f.supplier||ex.supplier};
+        await db.upsertInventoryItem(updated);
+        setInv(p=>p.map(i=>i.fabric===f.fabric&&i.color===f.color?updated:i));
+      } else {
+        const newItem = {id:Date.now(), fabric:f.fabric, color:f.color, stock:qty, itemNo:f.itemNo, costPrice, supplier:f.supplier};
+        await db.upsertInventoryItem(newItem);
+        setInv(p=>[...p, newItem]);
+      }
+      const log = {id:String(Date.now()), ...t, type:"입고", fabric:f.fabric, color:f.color, qty, itemNo:f.itemNo, costPrice, ref:f.itemNo?`No.${f.itemNo}`:"수동입고", note:[f.supplier,f.note].filter(Boolean).join(" | ")||"—"};
+      await db.insertLog(log);
+      setLogs(p=>[log,...p]);
+      setF({itemNo:"",fabric:"",color:"",qty:"",costPrice:"",supplier:"",note:""});
+      showToast("입고 등록 완료");
+    } catch(e) { console.error("입고 저장 실패:", e); showToast("저장 실패","error"); }
   };
 
   const totalAmt = (parseFloat(f.qty)||0) * (parseFloat(f.costPrice)||0);
@@ -114,22 +111,33 @@ function AutoShipOut({orders, setOrders, inv, setInv, logs, setLogs, showToast})
   const [selOrders, setSelOrders] = useState([]);
   const pending = orders.filter(o=>o.status!=="출고완료");
 
-  const doShipOut = () => {
+  const doShipOut = async () => {
     if (selOrders.length===0) { showToast("출고할 주문을 선택하세요","error"); return; }
     const t = nowT();
     const newLogs = [];
-    selOrders.forEach(oid=>{
-      const order = orders.find(o=>o.id===oid);
-      if (!order) return;
-      (order.items||[]).forEach(item=>{
-        setInv(p=>p.map(i=>i.fabric===item.fabric&&i.color===item.color?{...i,stock:Math.max(0,i.stock-item.qty)}:i));
-        newLogs.push({id:Date.now()+Math.random(),...t,type:"출고",fabric:item.fabric,color:item.color||"",qty:item.qty,ref:order.id,note:`판매출고 — ${order.customer}`});
-      });
-      setOrders(p=>p.map(o=>o.id===oid?{...o,status:"출고완료"}:o));
-    });
-    setLogs(p=>[...newLogs,...p]);
-    setSelOrders([]);
-    showToast(`${selOrders.length}건 자동출고 완료`);
+    try {
+      for (const oid of selOrders) {
+        const order = orders.find(o=>o.id===oid);
+        if (!order) continue;
+        for (const item of (order.items||[])) {
+          const invItem = inv.find(i=>i.fabric===item.fabric&&i.color===item.color);
+          if (invItem) {
+            const updated = {...invItem, stock:Math.max(0,invItem.stock-item.qty)};
+            await db.upsertInventoryItem(updated);
+          }
+          setInv(p=>p.map(i=>i.fabric===item.fabric&&i.color===item.color?{...i,stock:Math.max(0,i.stock-item.qty)}:i));
+          const log = {id:String(Date.now()+Math.random()),...t,type:"출고",fabric:item.fabric,color:item.color||"",qty:item.qty,ref:order.id,note:`판매출고 — ${order.customer}`};
+          await db.insertLog(log);
+          newLogs.push(log);
+        }
+        const updatedOrder = {...order, status:"출고완료"};
+        await db.upsertOrder(updatedOrder);
+        setOrders(p=>p.map(o=>o.id===oid?{...o,status:"출고완료"}:o));
+      }
+      setLogs(p=>[...newLogs,...p]);
+      setSelOrders([]);
+      showToast(`${selOrders.length}건 자동출고 완료`);
+    } catch(e) { console.error("출고 실패:", e); showToast("출고 실패","error"); }
   };
 
   return (

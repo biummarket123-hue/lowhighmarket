@@ -2,6 +2,7 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./UI.jsx";
 import { G, SF, S, baseInp, aiParseText, uid, nowT, pC } from "../constants.js";
+import * as db from "../lib/db.js";
 
 function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, setCustomers, setTab, showToast, kakaoAlert, managers, setManagers, activeManager, setActiveManager}) {
   const [newManager, setNewManager] = useState("");
@@ -19,31 +20,59 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
     finally { setParsing(false); }
   };
 
-  const confirm = () => {
+  const confirm = async () => {
     if (!parsed) return;
     const id = uid(), t = nowT();
     const order = {id,...t,customer:parsed.customer||"미확인",phone:parsed.phone,items:parsed.items||[],payment:parsed.payment||"미입금",address:parsed.address,note:parsed.note,status:"접수",manager:activeManager||""};
-    setOrders(p=>[order,...p]);
-    (parsed.items||[]).forEach(item=>{
-      setInv(p=>p.map(i=>i.fabric===item.fabric&&i.color===item.color?{...i,stock:Math.max(0,i.stock-item.qty)}:i));
-      setLogs(p=>[{id:Date.now()+Math.random(),...t,type:"출고",fabric:item.fabric,color:item.color,qty:item.qty,ref:id,note:`주문출고 — ${order.customer}`},...p]);
-    });
-    if (parsed.customer) {
-      setCustomers(p=>{
-        const ex = p.find(c=>c.name===parsed.customer);
-        if (ex) return p.map(c=>c.name===parsed.customer?{...c,totalOrders:(c.totalOrders||0)+1,lastOrder:t.date,phone:parsed.phone||c.phone,address:parsed.address||c.address}:c);
-        return [...p,{id:Date.now(),name:parsed.customer,phone:parsed.phone||"",address:parsed.address||"",totalOrders:1,lastOrder:t.date,note:""}];
+
+    // Supabase 저장
+    try {
+      await db.upsertOrder(order);
+      setOrders(p=>[order,...p]);
+
+      for (const item of (parsed.items||[])) {
+        setInv(p=>p.map(i=>i.fabric===item.fabric&&i.color===item.color?{...i,stock:Math.max(0,i.stock-item.qty)}:i));
+        const log = {id:String(Date.now()+Math.random()),...t,type:"출고",fabric:item.fabric,color:item.color,qty:item.qty,ref:id,note:`주문출고 — ${order.customer}`};
+        await db.insertLog(log);
+        setLogs(p=>[log,...p]);
+      }
+
+      // 재고 업데이트를 Supabase에 반영
+      const updatedInv = inv.map(i => {
+        const match = (parsed.items||[]).find(it=>it.fabric===i.fabric&&it.color===i.color);
+        return match ? {...i, stock: Math.max(0, i.stock - match.qty)} : i;
       });
+      for (const item of updatedInv) { await db.upsertInventoryItem(item); }
+
+      if (parsed.customer) {
+        const ex = customers.find(c=>c.name===parsed.customer);
+        if (ex) {
+          const updated = {...ex, totalOrders:(ex.totalOrders||0)+1, lastOrder:t.date, phone:parsed.phone||ex.phone, address:parsed.address||ex.address};
+          await db.upsertCustomer(updated);
+          setCustomers(p=>p.map(c=>c.name===parsed.customer?updated:c));
+        } else {
+          const newCust = {name:parsed.customer,phone:parsed.phone||"",address:parsed.address||"",totalOrders:1,lastOrder:t.date,note:""};
+          const saved = await db.upsertCustomer(newCust);
+          setCustomers(p=>[...p, saved || {...newCust, id:Date.now()}]);
+        }
+      }
+
+      kakaoAlert(`📋 새 주문\n${id} — ${order.customer}\n${(parsed.items||[]).map(i=>`${i.fabric} ${i.color} ${i.qty}마`).join(", ")}`);
+      setParsed(null); setTxt(""); setTab(1); showToast("주문 등록 완료");
+    } catch(e) {
+      console.error("주문 저장 실패:", e);
+      showToast("저장 실패: " + e.message, "error");
     }
-    kakaoAlert(`📋 새 주문\n${id} — ${order.customer}\n${(parsed.items||[]).map(i=>`${i.fabric} ${i.color} ${i.qty}마`).join(", ")}`);
-    setParsed(null); setTxt(""); setTab(1); showToast("주문 등록 완료");
   };
 
-  const addManager = () => {
+  const addManager = async () => {
     if (!newManager.trim() || managers.includes(newManager.trim())) return;
-    setManagers(p=>[...p, newManager.trim()]);
-    setNewManager("");
-    showToast("담당자 등록 완료");
+    try {
+      await db.addManager(newManager.trim());
+      setManagers(p=>[...p, newManager.trim()]);
+      setNewManager("");
+      showToast("담당자 등록 완료");
+    } catch(e) { showToast("등록 실패","error"); }
   };
 
   return (
@@ -103,7 +132,7 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
                 <div style={{fontSize:11,color:G.creamMuted,marginBottom:6}}>등록된 담당자 (탭하여 삭제)</div>
                 <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                   {managers.map(m=>(
-                    <button key={m} onClick={()=>{setManagers(p=>p.filter(x=>x!==m));if(activeManager===m)setActiveManager("");}}
+                    <button key={m} onClick={async()=>{try{await db.removeManager(m);}catch{}setManagers(p=>p.filter(x=>x!==m));if(activeManager===m)setActiveManager("");}}
                       style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${G.red}40`,background:G.redBg,color:G.red,fontSize:11,cursor:"pointer",fontFamily:S,fontWeight:600,display:"flex",alignItems:"center",gap:4}}>
                       {m} <span style={{fontSize:10}}>✕</span>
                     </button>
