@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { G, SF, S, baseInp } from "../constants.js";
 
 function Tag({c, bg, children}) {
   return <span style={{display:"inline-flex",alignItems:"center",padding:"2px 9px",borderRadius:20,fontSize:11,fontWeight:700,fontFamily:S,color:c,background:bg,whiteSpace:"nowrap"}}>{children}</span>;

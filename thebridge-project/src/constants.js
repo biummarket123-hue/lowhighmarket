@@ -75,4 +75,4 @@ async function aiParseImage(base64, mimeType) {
 }
 
 // ── atoms ────────────────────────────────────────────────────
-export { G, SF, S, REWARDS_DATA, INIT_DATA };
+export { G, SF, S, REWARDS_DATA, INIT_DATA, baseInp };

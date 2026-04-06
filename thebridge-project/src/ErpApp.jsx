@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
-import { G, SF, S, INIT_DATA, DEFAULT_SETTINGS, DEFAULT_MANAGERS, DEFAULT_INV, STORAGE_KEYS } from "./constants.js";
+import { G, SF, S, INIT_DATA, DEFAULT_SETTINGS, DEFAULT_MANAGERS, DEFAULT_INV, STORAGE_KEYS, baseInp } from "./constants.js";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./components/UI.jsx";
 import OrderInput from "./components/OrderInput.jsx";
 import DepositTab from "./components/DepositTab.jsx";

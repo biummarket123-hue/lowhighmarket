@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./UI.jsx";
-import { G, SF, S, REWARDS_DATA, INIT_DATA, DEFAULT_SETTINGS, DEFAULT_MANAGERS, DEFAULT_INV, STORAGE_KEYS } from "../constants.js";
+import { G, SF, S, REWARDS_DATA, INIT_DATA, DEFAULT_SETTINGS, DEFAULT_MANAGERS, DEFAULT_INV, STORAGE_KEYS, baseInp } from "../constants.js";
 
 function CustomerTab({customers, setCustomers, orders, exportCustomers, showToast, kakaoAlert, setConfirmDel, setEditingCust}) {
   const [form, setForm] = useState({name:"",phone:"",address:"",note:""});
