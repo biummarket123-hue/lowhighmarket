@@ -57,15 +57,12 @@ async function aiParseText(text, apiKey) {
     },
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514", max_tokens:1000,
-      system: PARSE_SYSTEM,
-      messages:[{role:"user",content:[{type:"text",text}]}],
+      system:[{type:"text",text:PARSE_SYSTEM}],
+      messages:[{role:"user",content:text}],
     }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err.error?.message || `API 오류 (${res.status})`);
-  }
-  const d = await res.json();
+  const d = await res.json().catch(()=>({}));
+  if (!res.ok) throw new Error(d.error?.message || `API 오류 (${res.status})`);
   return JSON.parse((d.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
 }
 
@@ -81,18 +78,15 @@ async function aiParseImage(base64, mimeType, apiKey) {
     },
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514", max_tokens:1000,
-      system: PARSE_SYSTEM,
+      system:[{type:"text",text:PARSE_SYSTEM}],
       messages:[{role:"user",content:[
         {type:"image",source:{type:"base64",media_type:mimeType,data:base64}},
         {type:"text",text:"이 이미지에서 원단 주문 정보를 추출해서 JSON으로 반환하세요."},
       ]}],
     }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err.error?.message || `API 오류 (${res.status})`);
-  }
-  const d = await res.json();
+  const d = await res.json().catch(()=>({}));
+  if (!res.ok) throw new Error(d.error?.message || `API 오류 (${res.status})`);
   return JSON.parse((d.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
 }
 
