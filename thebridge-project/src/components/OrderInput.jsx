@@ -37,12 +37,13 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
         setLogs(p=>[log,...p]);
       }
 
-      // 재고 업데이트를 Supabase에 반영
-      const updatedInv = inv.map(i => {
-        const match = (parsed.items||[]).find(it=>it.fabric===i.fabric&&it.color===i.color);
-        return match ? {...i, stock: Math.max(0, i.stock - match.qty)} : i;
-      });
-      for (const item of updatedInv) { await db.upsertInventoryItem(item); }
+      // 변경된 재고만 Supabase에 반영
+      for (const item of (parsed.items||[])) {
+        const invItem = inv.find(i=>i.fabric===item.fabric&&i.color===item.color);
+        if (invItem) {
+          await db.upsertInventoryItem({...invItem, stock: Math.max(0, invItem.stock - item.qty)});
+        }
+      }
 
       if (parsed.customer) {
         const ex = customers.find(c=>c.name===parsed.customer);

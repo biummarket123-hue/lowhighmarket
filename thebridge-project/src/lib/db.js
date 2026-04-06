@@ -82,13 +82,21 @@ export async function fetchInventory() {
 }
 
 export async function upsertInventoryItem(item) {
-  const { error } = await supabase.from("inventory").upsert({
-    id: item.id,
-    fabric: item.fabric,
-    color: item.color || "",
-    stock: item.stock,
-  });
-  if (error) throw error;
+  if (item.id) {
+    // 기존 레코드 업데이트
+    const { error } = await supabase.from("inventory")
+      .update({ fabric: item.fabric, color: item.color || "", stock: item.stock })
+      .eq("id", item.id);
+    if (error) throw error;
+  } else {
+    // 신규 추가 (id는 DB가 생성)
+    const { error } = await supabase.from("inventory").insert({
+      fabric: item.fabric,
+      color: item.color || "",
+      stock: item.stock,
+    });
+    if (error) throw error;
+  }
 }
 
 export async function deleteInventoryItem(id) {
@@ -115,11 +123,21 @@ export async function upsertCustomer(c) {
     last_order: c.lastOrder || null,
     note: c.note || "",
   };
-  if (c.id && typeof c.id === "number") payload.id = c.id;
-  const { data, error } = await supabase
-    .from("customers")
-    .upsert(payload)
-    .select();
+  let data, error;
+  if (c.id && typeof c.id === "number") {
+    // 기존 고객 업데이트
+    ({ data, error } = await supabase
+      .from("customers")
+      .update(payload)
+      .eq("id", c.id)
+      .select());
+  } else {
+    // 신규 고객 추가
+    ({ data, error } = await supabase
+      .from("customers")
+      .insert(payload)
+      .select());
+  }
   if (error) throw error;
   return data?.[0] ? toCustCamel(data[0]) : null;
 }
