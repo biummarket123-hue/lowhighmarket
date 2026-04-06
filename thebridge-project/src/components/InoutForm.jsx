@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./components/UI.jsx";
+import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./UI.jsx";
 import { G, SF, S, REWARDS_DATA, INIT_DATA, DEFAULT_SETTINGS, DEFAULT_MANAGERS, DEFAULT_INV, STORAGE_KEYS } from "./constants.js";
 
 function InoutForm({inv, setInv, logs, setLogs, showToast}) {
