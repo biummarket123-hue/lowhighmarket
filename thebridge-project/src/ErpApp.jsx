@@ -399,7 +399,6 @@ function ErpApp() {
             setTab={setTab} showToast={showToast} kakaoAlert={kakaoAlert}
             managers={managers} setManagers={setManagers}
             activeManager={activeManager} setActiveManager={setActiveManager}
-            settings={settings}
           />
         )}
 
