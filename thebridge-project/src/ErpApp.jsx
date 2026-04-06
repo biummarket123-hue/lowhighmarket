@@ -126,7 +126,7 @@ function ErpApp() {
           load(STORAGE_KEYS.theme, "dark"),
         ]);
         setOrders(o); setInv(i); setLogs(l); setCustomers(c);
-        setSettings(s); setManagers(m); setBarcodeDB(b); setTheme(th);
+        setSettings(prev => ({...DEFAULT_SETTINGS, ...s, ...prev})); setManagers(m); setBarcodeDB(b); setTheme(th);
       } catch(e) {
         console.error("Storage load error:", e);
       } finally {
