@@ -62,7 +62,9 @@ function ErpApp() {
   const [inv, setInv] = useState(DEFAULT_INV);
   const [logs, setLogs] = useState([]);
   const [customers, setCustomers] = useState(INIT_DATA.customers.map((c,i)=>({...c,id:i+1})));
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const SETTINGS_KEY = 'erp_settings_v1';
+  const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+  const [settings, setSettings] = useState({...DEFAULT_SETTINGS, ...savedSettings});
   const [managers, setManagers] = useState(DEFAULT_MANAGERS);
   const [barcodeDB, setBarcodeDB] = useState({});
   const [theme, setTheme] = useState("dark");
@@ -139,7 +141,7 @@ function ErpApp() {
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.inv, inv); },[inv,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.logs, logs); },[logs,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.customers, customers); },[customers,loaded]);
-  useEffect(()=>{ if(loaded) save(STORAGE_KEYS.settings, settings); },[settings,loaded]);
+  useEffect(()=>{ if(loaded) { save(STORAGE_KEYS.settings, settings); try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch {} } },[settings,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.managers, managers); },[managers,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.barcodeDB, barcodeDB); },[barcodeDB,loaded]);
   useEffect(()=>{ if(loaded) save(STORAGE_KEYS.theme, theme); },[theme,loaded]);
