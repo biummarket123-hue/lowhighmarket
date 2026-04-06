@@ -12,7 +12,7 @@ thebridge-project/
 ├── public/
 │   └── favicon.svg
 ├── src/
-│   ├── main.jsx              # 앱 진입점
+│   ├── main.jsx              # 앱 진입점 
 │   ├── App.jsx               # 루트 (랜딩 ↔ ERP 전환)
 │   ├── index.css             # 전역 스타일
 │   ├── constants.js          # 색상·상수·초기 데이터
