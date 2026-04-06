@@ -12,10 +12,13 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
   const [err, setErr] = useState("");
 
   const parse = async () => {
-    if (!txt.trim()) return;
+    console.log("[parse] 호출됨, txt:", JSON.stringify(txt));
+    console.log("[parse] txt.trim() 길이:", txt.trim().length);
+    if (!txt.trim()) { console.log("[parse] txt 비어있어서 early return"); return; }
+    console.log("[parse] AI 분석 시작");
     setParsing(true); setParsed(null); setErr("");
     try { setParsed(await aiParseText(txt)); }
-    catch(e) { setErr(e.message || "분석 실패. 다시 시도해주세요."); }
+    catch(e) { console.error("[parse] 에러:", e); setErr(e.message || "분석 실패. 다시 시도해주세요."); }
     finally { setParsing(false); }
   };
 

@@ -49,6 +49,7 @@ const isDev = import.meta.env.DEV;
 const DEV_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 
 async function aiCallAPI(messages, system) {
+  console.log("[aiCallAPI] 호출됨, isDev:", isDev, "DEV_API_KEY:", !!DEV_API_KEY);
   if (isDev && DEV_API_KEY) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
@@ -80,7 +81,10 @@ async function aiCallAPI(messages, system) {
 
 async function aiParseText(text) {
   const d = await aiCallAPI([{role:"user",content:text}], PARSE_SYSTEM);
-  return JSON.parse((d.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
+  console.log("[AI 응답]", JSON.stringify(d, null, 2));
+  const raw = d.content?.[0]?.text || "{}";
+  console.log("[AI raw text]", raw);
+  return JSON.parse(raw.replace(/```json|```/g,"").trim());
 }
 
 async function aiParseImage(base64, mimeType) {
