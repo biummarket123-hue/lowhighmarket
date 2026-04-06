@@ -49,9 +49,8 @@ export async function fetchOrders() {
   return (data || []).map(toCamel);
 }
 
-export async function upsertOrder(order) {
-  const { error } = await supabase.from("orders").upsert({
-    id: order.id,
+export async function insertOrder(order) {
+  const { data, error } = await supabase.from("orders").insert({
     date: order.date,
     time: order.time,
     customer: order.customer,
@@ -62,7 +61,13 @@ export async function upsertOrder(order) {
     note: order.note || null,
     status: order.status || "접수",
     manager: order.manager || "",
-  });
+  }).select();
+  if (error) throw error;
+  return data?.[0] ? toCamel(data[0]) : null;
+}
+
+export async function updateOrder(id, fields) {
+  const { error } = await supabase.from("orders").update(fields).eq("id", id);
   if (error) throw error;
 }
 
@@ -81,22 +86,21 @@ export async function fetchInventory() {
   return data || [];
 }
 
-export async function upsertInventoryItem(item) {
-  if (item.id) {
-    // 기존 레코드 업데이트
-    const { error } = await supabase.from("inventory")
-      .update({ fabric: item.fabric, color: item.color || "", stock: item.stock })
-      .eq("id", item.id);
-    if (error) throw error;
-  } else {
-    // 신규 추가 (id는 DB가 생성)
-    const { error } = await supabase.from("inventory").insert({
-      fabric: item.fabric,
-      color: item.color || "",
-      stock: item.stock,
-    });
-    if (error) throw error;
-  }
+export async function updateInventoryItem(id, fields) {
+  const { error } = await supabase.from("inventory")
+    .update(fields)
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function insertInventoryItem(item) {
+  const { data, error } = await supabase.from("inventory").insert({
+    fabric: item.fabric,
+    color: item.color || "",
+    stock: item.stock,
+  }).select();
+  if (error) throw error;
+  return data?.[0] || null;
 }
 
 export async function deleteInventoryItem(id) {
@@ -114,30 +118,28 @@ export async function fetchCustomers() {
   return (data || []).map(toCustCamel);
 }
 
-export async function upsertCustomer(c) {
-  const payload = {
+export async function insertCustomer(c) {
+  const { data, error } = await supabase.from("customers").insert({
     name: c.name,
     phone: c.phone || "",
     address: c.address || "",
     total_orders: c.totalOrders || 0,
     last_order: c.lastOrder || null,
     note: c.note || "",
-  };
-  let data, error;
-  if (c.id && typeof c.id === "number") {
-    // 기존 고객 업데이트
-    ({ data, error } = await supabase
-      .from("customers")
-      .update(payload)
-      .eq("id", c.id)
-      .select());
-  } else {
-    // 신규 고객 추가
-    ({ data, error } = await supabase
-      .from("customers")
-      .insert(payload)
-      .select());
-  }
+  }).select();
+  if (error) throw error;
+  return data?.[0] ? toCustCamel(data[0]) : null;
+}
+
+export async function updateCustomer(id, c) {
+  const { data, error } = await supabase.from("customers").update({
+    name: c.name,
+    phone: c.phone || "",
+    address: c.address || "",
+    total_orders: c.totalOrders || 0,
+    last_order: c.lastOrder || null,
+    note: c.note || "",
+  }).eq("id", id).select();
   if (error) throw error;
   return data?.[0] ? toCustCamel(data[0]) : null;
 }
@@ -158,8 +160,7 @@ export async function fetchLogs() {
 }
 
 export async function insertLog(log) {
-  const { error } = await supabase.from("logs").insert({
-    id: log.id?.toString() || String(Date.now() + Math.random()),
+  const { data, error } = await supabase.from("logs").insert({
     date: log.date,
     time: log.time,
     type: log.type,
@@ -170,8 +171,9 @@ export async function insertLog(log) {
     cost_price: log.costPrice || 0,
     ref: log.ref || "",
     note: log.note || "",
-  });
+  }).select();
   if (error) throw error;
+  return data?.[0] ? toLogCamel(data[0]) : null;
 }
 
 export async function deleteLog(id) {
@@ -191,7 +193,7 @@ export async function fetchManagers() {
 
 export async function addManager(name) {
   const { error } = await supabase.from("managers").insert({ name });
-  if (error && error.code !== "23505") throw error; // ignore duplicate
+  if (error && error.code !== "23505") throw error;
 }
 
 export async function removeManager(name) {
@@ -201,8 +203,7 @@ export async function removeManager(name) {
 
 // ── Bulk: clear all data ──────────────────────────────────────
 export async function clearAllData() {
-  await supabase.from("orders").delete().neq("id", "");
-  await supabase.from("logs").delete().neq("id", "");
-  await supabase.from("customers").delete().gt("id", 0);
-  // inventory & managers: keep defaults
+  await supabase.from("orders").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("logs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("customers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 }

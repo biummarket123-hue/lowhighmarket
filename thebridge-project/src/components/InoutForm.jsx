@@ -14,17 +14,14 @@ function InoutForm({inv, setInv, logs, setLogs, showToast}) {
     try {
       const ex = inv.find(i=>i.fabric===f.fabric&&i.color===f.color);
       if (ex) {
-        const updated = {...ex, stock:ex.stock+qty, itemNo:f.itemNo||ex.itemNo, costPrice:costPrice||ex.costPrice, supplier:f.supplier||ex.supplier};
-        await db.upsertInventoryItem(updated);
-        setInv(p=>p.map(i=>i.fabric===f.fabric&&i.color===f.color?updated:i));
+        await db.updateInventoryItem(ex.id, { stock: ex.stock+qty });
+        setInv(p=>p.map(i=>i.id===ex.id?{...i, stock:i.stock+qty}:i));
       } else {
-        const newItem = {id:Date.now(), fabric:f.fabric, color:f.color, stock:qty, itemNo:f.itemNo, costPrice, supplier:f.supplier};
-        await db.upsertInventoryItem(newItem);
-        setInv(p=>[...p, newItem]);
+        const saved = await db.insertInventoryItem({ fabric:f.fabric, color:f.color, stock:qty });
+        if (saved) setInv(p=>[...p, saved]);
       }
-      const log = {id:String(Date.now()), ...t, type:"입고", fabric:f.fabric, color:f.color, qty, itemNo:f.itemNo, costPrice, ref:f.itemNo?`No.${f.itemNo}`:"수동입고", note:[f.supplier,f.note].filter(Boolean).join(" | ")||"—"};
-      await db.insertLog(log);
-      setLogs(p=>[log,...p]);
+      const log = await db.insertLog({...t, type:"입고", fabric:f.fabric, color:f.color, qty, itemNo:f.itemNo, costPrice, ref:f.itemNo?`No.${f.itemNo}`:"수동입고", note:[f.supplier,f.note].filter(Boolean).join(" | ")||"—"});
+      if (log) setLogs(p=>[log,...p]);
       setF({itemNo:"",fabric:"",color:"",qty:"",costPrice:"",supplier:"",note:""});
       showToast("입고 등록 완료");
     } catch(e) { console.error("입고 저장 실패:", e); showToast("저장 실패","error"); }
@@ -122,16 +119,14 @@ function AutoShipOut({orders, setOrders, inv, setInv, logs, setLogs, showToast})
         for (const item of (order.items||[])) {
           const invItem = inv.find(i=>i.fabric===item.fabric&&i.color===item.color);
           if (invItem) {
-            const updated = {...invItem, stock:Math.max(0,invItem.stock-item.qty)};
-            await db.upsertInventoryItem(updated);
+            const newStock = Math.max(0, invItem.stock - item.qty);
+            await db.updateInventoryItem(invItem.id, { stock: newStock });
           }
           setInv(p=>p.map(i=>i.fabric===item.fabric&&i.color===item.color?{...i,stock:Math.max(0,i.stock-item.qty)}:i));
-          const log = {id:String(Date.now()+Math.random()),...t,type:"출고",fabric:item.fabric,color:item.color||"",qty:item.qty,ref:order.id,note:`판매출고 — ${order.customer}`};
-          await db.insertLog(log);
-          newLogs.push(log);
+          const log = await db.insertLog({...t, type:"출고", fabric:item.fabric, color:item.color||"", qty:item.qty, ref:order.id, note:`판매출고 — ${order.customer}`});
+          if (log) newLogs.push(log);
         }
-        const updatedOrder = {...order, status:"출고완료"};
-        await db.upsertOrder(updatedOrder);
+        await db.updateOrder(oid, { status:"출고완료" });
         setOrders(p=>p.map(o=>o.id===oid?{...o,status:"출고완료"}:o));
       }
       setLogs(p=>[...newLogs,...p]);

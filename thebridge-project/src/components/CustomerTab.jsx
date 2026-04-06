@@ -12,8 +12,8 @@ function CustomerTab({customers, setCustomers, orders, exportCustomers, showToas
     if (!form.name.trim()) return;
     if (customers.find(c=>c.name===form.name)) { showToast("이미 등록된 고객명","error"); return; }
     try {
-      const saved = await db.upsertCustomer({...form, totalOrders:0, lastOrder:"—"});
-      setCustomers(p=>[...p, saved || {id:Date.now(),...form,totalOrders:0,lastOrder:"—"}]);
+      const saved = await db.insertCustomer({...form, totalOrders:0, lastOrder:"—"});
+      if (saved) setCustomers(p=>[...p, saved]);
       setForm({name:"",phone:"",address:"",note:""}); showToast("고객 등록 완료");
     } catch(e) { showToast("등록 실패","error"); }
   };

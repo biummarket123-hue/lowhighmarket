@@ -22,43 +22,39 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
 
   const confirm = async () => {
     if (!parsed) return;
-    const id = uid(), t = nowT();
-    const order = {id,...t,customer:parsed.customer||"미확인",phone:parsed.phone,items:parsed.items||[],payment:parsed.payment||"미입금",address:parsed.address,note:parsed.note,status:"접수",manager:activeManager||""};
+    const t = nowT();
 
-    // Supabase 저장
     try {
-      await db.upsertOrder(order);
-      setOrders(p=>[order,...p]);
+      // 주문 저장 (id는 Supabase가 자동생성)
+      const saved = await db.insertOrder({...t, customer:parsed.customer||"미확인", phone:parsed.phone, items:parsed.items||[], payment:parsed.payment||"미입금", address:parsed.address, note:parsed.note, status:"접수", manager:activeManager||""});
+      setOrders(p=>[saved,...p]);
 
       for (const item of (parsed.items||[])) {
-        setInv(p=>p.map(i=>i.fabric===item.fabric&&i.color===item.color?{...i,stock:Math.max(0,i.stock-item.qty)}:i));
-        const log = {id:String(Date.now()+Math.random()),...t,type:"출고",fabric:item.fabric,color:item.color,qty:item.qty,ref:id,note:`주문출고 — ${order.customer}`};
-        await db.insertLog(log);
-        setLogs(p=>[log,...p]);
-      }
-
-      // 변경된 재고만 Supabase에 반영
-      for (const item of (parsed.items||[])) {
+        // 재고 차감
         const invItem = inv.find(i=>i.fabric===item.fabric&&i.color===item.color);
         if (invItem) {
-          await db.upsertInventoryItem({...invItem, stock: Math.max(0, invItem.stock - item.qty)});
+          const newStock = Math.max(0, invItem.stock - item.qty);
+          await db.updateInventoryItem(invItem.id, { stock: newStock });
+          setInv(p=>p.map(i=>i.id===invItem.id?{...i,stock:newStock}:i));
         }
+        // 출고 로그
+        const log = await db.insertLog({...t, type:"출고", fabric:item.fabric, color:item.color, qty:item.qty, ref:saved.id, note:`주문출고 — ${saved.customer}`});
+        if (log) setLogs(p=>[log,...p]);
       }
 
+      // 고객 등록/업데이트
       if (parsed.customer) {
         const ex = customers.find(c=>c.name===parsed.customer);
         if (ex) {
-          const updated = {...ex, totalOrders:(ex.totalOrders||0)+1, lastOrder:t.date, phone:parsed.phone||ex.phone, address:parsed.address||ex.address};
-          await db.upsertCustomer(updated);
-          setCustomers(p=>p.map(c=>c.name===parsed.customer?updated:c));
+          const updated = await db.updateCustomer(ex.id, {...ex, totalOrders:(ex.totalOrders||0)+1, lastOrder:t.date, phone:parsed.phone||ex.phone, address:parsed.address||ex.address});
+          if (updated) setCustomers(p=>p.map(c=>c.id===ex.id?updated:c));
         } else {
-          const newCust = {name:parsed.customer,phone:parsed.phone||"",address:parsed.address||"",totalOrders:1,lastOrder:t.date,note:""};
-          const saved = await db.upsertCustomer(newCust);
-          setCustomers(p=>[...p, saved || {...newCust, id:Date.now()}]);
+          const newCust = await db.insertCustomer({name:parsed.customer, phone:parsed.phone||"", address:parsed.address||"", totalOrders:1, lastOrder:t.date, note:""});
+          if (newCust) setCustomers(p=>[...p, newCust]);
         }
       }
 
-      kakaoAlert(`📋 새 주문\n${id} — ${order.customer}\n${(parsed.items||[]).map(i=>`${i.fabric} ${i.color} ${i.qty}마`).join(", ")}`);
+      kakaoAlert(`📋 새 주문\n${saved.id} — ${saved.customer}\n${(parsed.items||[]).map(i=>`${i.fabric} ${i.color} ${i.qty}마`).join(", ")}`);
       setParsed(null); setTxt(""); setTab(1); showToast("주문 등록 완료");
     } catch(e) {
       console.error("주문 저장 실패:", e);
