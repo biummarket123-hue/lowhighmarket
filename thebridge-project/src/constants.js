@@ -58,10 +58,13 @@ async function aiParseText(text, apiKey) {
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514", max_tokens:1000,
       system: PARSE_SYSTEM,
-      messages:[{role:"user",content:text}],
+      messages:[{role:"user",content:[{type:"text",text}]}],
     }),
   });
-  if (!res.ok) throw new Error(`API 오류 (${res.status})`);
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error?.message || `API 오류 (${res.status})`);
+  }
   const d = await res.json();
   return JSON.parse((d.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
 }
@@ -85,7 +88,10 @@ async function aiParseImage(base64, mimeType, apiKey) {
       ]}],
     }),
   });
-  if (!res.ok) throw new Error(`API 오류 (${res.status})`);
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error?.message || `API 오류 (${res.status})`);
+  }
   const d = await res.json();
   return JSON.parse((d.content?.[0]?.text||"{}").replace(/```json|```/g,"").trim());
 }
