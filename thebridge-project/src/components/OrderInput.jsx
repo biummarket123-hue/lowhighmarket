@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./UI.jsx";
-import { G, SF, S, baseInp, aiParseText, uid, nowT } from "../constants.js";
+import { G, SF, S, baseInp, aiParseText, uid, nowT, pC } from "../constants.js";
 
 function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, setCustomers, setTab, showToast, kakaoAlert, managers, setManagers, activeManager, setActiveManager}) {
   const [newManager, setNewManager] = useState("");
@@ -12,13 +12,10 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
   const [err, setErr] = useState("");
 
   const parse = async () => {
-    console.log("[parse] 호출됨, txt:", JSON.stringify(txt));
-    console.log("[parse] txt.trim() 길이:", txt.trim().length);
-    if (!txt.trim()) { console.log("[parse] txt 비어있어서 early return"); return; }
-    console.log("[parse] AI 분석 시작");
+    if (!txt.trim()) return;
     setParsing(true); setParsed(null); setErr("");
     try { setParsed(await aiParseText(txt)); }
-    catch(e) { console.error("[parse] 에러:", e); setErr(e.message || "분석 실패. 다시 시도해주세요."); }
+    catch(e) { setErr(e.message || "분석 실패. 다시 시도해주세요."); }
     finally { setParsing(false); }
   };
 
