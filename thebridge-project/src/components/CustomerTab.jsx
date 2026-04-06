@@ -37,7 +37,7 @@ function CustomerTab({customers, setCustomers, orders, exportCustomers, showToas
             <div style={{fontFamily:SF,fontSize:16,fontWeight:700}}>{selected.name}</div>
             <div style={{display:"flex",gap:5}}>
               <button onClick={()=>setEditingCust({...selected})} style={{padding:"5px 10px",fontSize:11,borderRadius:8,border:`1px solid ${G.border}`,background:"transparent",color:G.creamMuted,cursor:"pointer",fontFamily:S}}>✏ 수정</button>
-              <button onClick={()=>kakaoAlert(`[비움마켓] ${selected.name} 고객님 메시지 테스트`)} style={{padding:"5px 10px",fontSize:11,borderRadius:8,border:`1px solid ${G.yellow}`,background:G.yellowBg,color:G.yellow,cursor:"pointer",fontFamily:S}}>카톡</button>
+              <button onClick={()=>kakaoAlert(`[로하이마켓] ${selected.name} 고객님 메시지 테스트`)} style={{padding:"5px 10px",fontSize:11,borderRadius:8,border:`1px solid ${G.yellow}`,background:G.yellowBg,color:G.yellow,cursor:"pointer",fontFamily:S}}>카톡</button>
               <button onClick={()=>{setConfirmDel({type:"customer",id:selected.id,label:selected.name});setSelected(null);}} style={{padding:"5px 10px",fontSize:11,borderRadius:8,border:`1px solid ${G.red}40`,background:G.redBg,color:G.red,cursor:"pointer",fontFamily:S}}>🗑</button>
               <button onClick={()=>setSelected(null)} style={{padding:"5px 10px",fontSize:11,borderRadius:8,border:`1px solid ${G.border}`,background:"transparent",color:G.creamMuted,cursor:"pointer",fontFamily:S}}>✕</button>
             </div>

@@ -109,17 +109,17 @@ function ErpApp() {
   const exportOrders = () => {
     const rows = orders.flatMap(o=>o.items.map(it=>({주문번호:o.id,날짜:o.date,고객명:o.customer,원단:it.fabric,색상:it.color,수량:it.qty,결제:o.payment,상태:o.status,배송지:o.address||"",메모:o.note||""})));
     const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"주문현황"); dlXlsx(wb,"비움마켓_주문현황.xlsx"); showToast("엑셀 다운로드 완료");
+    XLSX.utils.book_append_sheet(wb,ws,"주문현황"); dlXlsx(wb,"로하이마켓_주문현황.xlsx"); showToast("엑셀 다운로드 완료");
   };
   const exportLogs = () => {
     const rows=logs.map(l=>({날짜:l.date,구분:l.type,아이템No:l.itemNo||"",원단:l.fabric,색상:l.color,수량:l.qty,입고가:l.costPrice||0,참조:l.ref,메모:l.note}));
     const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"입출고이력"); dlXlsx(wb,"비움마켓_입출고이력.xlsx"); showToast("엑셀 다운로드 완료");
+    XLSX.utils.book_append_sheet(wb,ws,"입출고이력"); dlXlsx(wb,"로하이마켓_입출고이력.xlsx"); showToast("엑셀 다운로드 완료");
   };
   const exportCustomers = () => {
     const rows=customers.map(c=>({고객명:c.name,연락처:c.phone||"",주소:c.address||"",총주문:c.totalOrders||0,메모:c.note||""}));
     const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"고객목록"); dlXlsx(wb,"비움마켓_고객목록.xlsx"); showToast("엑셀 다운로드 완료");
+    XLSX.utils.book_append_sheet(wb,ws,"고객목록"); dlXlsx(wb,"로하이마켓_고객목록.xlsx"); showToast("엑셀 다운로드 완료");
   };
   const exportShipping = (selIds, courier) => {
     const COLS = {
@@ -163,7 +163,7 @@ function ErpApp() {
     ws["!cols"]=fmt.cols.map(()=>({wch:22}));
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"송장출력");
-    dlXlsx(wb,`비움마켓_${courier}_송장.xlsx`);
+    dlXlsx(wb,`로하이마켓_${courier}_송장.xlsx`);
     showToast(`${courier} 송장 ${targets.length}건 출력`);
     setShippingOpen(false);
   };
@@ -201,7 +201,7 @@ function ErpApp() {
     <div className="erp-root" style={{fontFamily:S,background:T.bg,minHeight:"100vh",color:T.cream,maxWidth:600,margin:"0 auto"}}>
       {!loaded && (
         <div style={{position:"fixed",inset:0,background:G.bg,zIndex:999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
-          <div style={{fontFamily:SF,fontSize:24,fontWeight:800,color:G.copper}}>비움마켓 ERP</div>
+          <div style={{fontFamily:SF,fontSize:24,fontWeight:800,color:G.copper}}>로하이마켓 ERP</div>
           <div style={{fontSize:11,color:G.creamMuted}}>v2.1</div>
           <div style={{width:40,height:40,border:`3px solid ${G.copper}30`,borderTop:`3px solid ${G.copper}`,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
           <div style={{fontSize:12,color:G.creamMuted}}>데이터 불러오는 중...</div>
@@ -293,7 +293,7 @@ function ErpApp() {
       {/* Header */}
       <div style={{background:T.surface,borderBottom:`1px solid ${T.border}`,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:10}}>
         <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-          <span style={{fontFamily:SF,fontSize:16,fontWeight:900,color:T.cream,whiteSpace:"nowrap"}}>비움마켓</span>
+          <span style={{fontFamily:SF,fontSize:16,fontWeight:900,color:T.cream,whiteSpace:"nowrap"}}>로하이마켓</span>
           <span style={{fontSize:9,color:T.white,fontWeight:800,background:T.copper,padding:"2px 6px",borderRadius:4}}>ERP</span>
           <span style={{fontSize:9,color:T.creamMuted}}>v2.1</span>
         </div>
@@ -794,7 +794,7 @@ function ErpApp() {
               </div>
               <div style={{marginBottom:10}}><FLabel>Webhook URL</FLabel><input value={settings.kakaoWebhook} onChange={e=>setSettings(s=>({...s,kakaoWebhook:e.target.value}))} placeholder="https://n8n.your-server.com/webhook/..." style={baseInp}/></div>
               <div style={{marginBottom:12}}><FLabel>저재고 기준 (마)</FLabel><input type="number" value={settings.lowStockAlert} onChange={e=>setSettings(s=>({...s,lowStockAlert:parseInt(e.target.value)||10}))} style={baseInp}/></div>
-              <GhostBtn onClick={()=>kakaoAlert("🔔 비움마켓 ERP 테스트 알림")} full>테스트 전송</GhostBtn>
+              <GhostBtn onClick={()=>kakaoAlert("🔔 로하이마켓 ERP 테스트 알림")} full>테스트 전송</GhostBtn>
             </Card>
             <Card style={{marginBottom:14,background:T.card,border:`1px solid ${T.border}`}}>
               <SecTitle>📂 엑셀 파일 업로드</SecTitle>
