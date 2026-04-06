@@ -43,6 +43,7 @@ function ErpApp() {
 
   const load = async (key, fallback) => {
     try {
+      if (!window.storage) return fallback;
       const r = await Promise.race([
         window.storage.get(key, SHARED),
         new Promise(res=>setTimeout(()=>res(null),3000))
@@ -51,7 +52,7 @@ function ErpApp() {
     } catch { return fallback; }
   };
   const save = async (key, val) => {
-    try { await window.storage.set(key, JSON.stringify(val), SHARED); } catch {}
+    try { if (window.storage) await window.storage.set(key, JSON.stringify(val), SHARED); } catch {}
   };
 
   const [tab, setTab] = useState(0);
@@ -83,14 +84,14 @@ function ErpApp() {
     (async()=>{
       try {
         // ── 버전 체크 ──────────────────────────────────
-        const storedVer = await Promise.race([
+        const storedVer = window.storage ? await Promise.race([
           window.storage.get("bium:latest_version", true),
           new Promise(res=>setTimeout(()=>res(null),2000))
-        ]);
-        const storedUrl = await Promise.race([
+        ]) : null;
+        const storedUrl = window.storage ? await Promise.race([
           window.storage.get("bium:latest_url", true),
           new Promise(res=>setTimeout(()=>res(null),2000))
-        ]);
+        ]) : null;
 
         const storedVerNum = storedVer?.value ? parseFloat(storedVer.value) : 0;
         const currentUrl = window.location.href;
@@ -104,7 +105,7 @@ function ErpApp() {
         }
 
         // 최신 버전이면 내 URL과 버전을 저장
-        if (storedVerNum <= APP_VERSION_NUM) {
+        if (storedVerNum <= APP_VERSION_NUM && window.storage) {
           try {
             await window.storage.set("bium:latest_version", String(APP_VERSION_NUM), true);
             await window.storage.set("bium:latest_url", currentUrl, true);
