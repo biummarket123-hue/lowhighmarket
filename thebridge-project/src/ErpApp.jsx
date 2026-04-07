@@ -125,7 +125,7 @@ function ErpApp() {
     const COLS = {
       "CJ대한통운":{
         cols:["받는분성명","받는분전화번호","받는분기타연락처","받는분우편번호","받는분주소(전체, 분할)","배송메세지1","배송메세지2","품목명"],
-        widths:[15,18,15,12,73,15,15,20],
+        widths:[16,20,16,14,50,18,18,30],
         purple:[0,1,4],
         row:(o,s,c)=>({
           "받는분성명":o.customer,
@@ -177,17 +177,18 @@ function ErpApp() {
       const hAddr = XLSX.utils.encode_cell({r:0,c:ci});
       if(!ws[hAddr]) ws[hAddr]={v:"",t:"s"};
       ws[hAddr].s = {
-        font:{ bold:true, color:{ rgb: purpleSet.has(ci) ? "7030A0" : "000000" } },
+        font:{ bold:true, sz:13, color:{ rgb: purpleSet.has(ci) ? "7030A0" : "000000" } },
         fill:{ fgColor:{ rgb:"F0F0F0" } },
-        alignment:{ horizontal:"center" },
+        alignment:{ horizontal:"center", vertical:"center" },
       };
-      // 데이터 행: 검정색
+      // 데이터 행: 검정색, 글씨 크기 13
       for(let ri=1;ri<aoa.length;ri++){
         const dAddr = XLSX.utils.encode_cell({r:ri,c:ci});
         if(!ws[dAddr]) ws[dAddr]={v:"",t:"s"};
-        ws[dAddr].s = { font:{ color:{ rgb:"000000" } } };
+        ws[dAddr].s = { font:{ sz:13, color:{ rgb:"000000" } } };
       }
     });
+    ws["!rows"]=aoa.map((_,i)=>({hpt: i===0 ? 22 : 20}));
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"송장출력");
     dlXlsx(wb,`로하이마켓_${courier}_송장.xlsx`);
