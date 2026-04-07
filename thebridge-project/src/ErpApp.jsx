@@ -122,7 +122,8 @@ function ErpApp() {
 
   const handleShipOut = async (orderId) => {
     const order = orders.find(o=>o.id===orderId);
-    if (!order || order.status==="출고완료") return;
+    if (!order) return;
+    if (order.status==="출고완료") { showToast("이미 출고완료된 주문입니다"); return; }
     const t = nowT();
     try {
       for (const item of (order.items||[])) {
@@ -132,13 +133,13 @@ function ErpApp() {
           await db.updateInventoryItem(invItem.id, { stock: newStock });
           setInv(p=>p.map(i=>i.id===invItem.id?{...i,stock:newStock}:i));
         }
-        const log = await db.insertLog({...t, type:"출고", fabric:item.fabric, color:item.color||"", qty:item.qty, ref:order.id, note:`판매출고 — ${order.customer}`});
+        const log = await db.insertLog({...t, type:"출고", fabric:item.fabric, color:item.color||"", qty:item.qty, ref:orderId, note:`판매출고 — ${order.customer}`});
         if (log) setLogs(p=>[log,...p]);
       }
       await db.updateOrder(orderId, { status:"출고완료" });
       setOrders(p=>p.map(o=>o.id===orderId?{...o,status:"출고완료"}:o));
       showToast("출고 처리 완료");
-    } catch(e) { console.error("출고 실패:", e); showToast("출고 실패","error"); }
+    } catch(e) { console.error("출고 실패:", e); showToast("출고 실패: "+e.message,"error"); }
   };
 
   const handleUndoShipOut = async (orderId, newStatus) => {
