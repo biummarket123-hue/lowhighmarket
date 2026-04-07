@@ -141,6 +141,35 @@ function ErpApp() {
     } catch(e) { console.error("출고 실패:", e); showToast("출고 실패","error"); }
   };
 
+  const handleUndoShipOut = async (orderId, newStatus) => {
+    const order = orders.find(o=>o.id===orderId);
+    if (!order || order.status!=="출고완료") {
+      await db.updateOrder(orderId, { status: newStatus });
+      setOrders(p=>p.map(o=>o.id===orderId?{...o,status:newStatus}:o));
+      return;
+    }
+    try {
+      // 재고 복구
+      for (const item of (order.items||[])) {
+        const invItem = inv.find(i=>i.fabric===item.fabric&&i.color===item.color);
+        if (invItem) {
+          const restored = invItem.stock + (item.qty||0);
+          await db.updateInventoryItem(invItem.id, { stock: restored });
+          setInv(p=>p.map(i=>i.id===invItem.id?{...i,stock:restored}:i));
+        }
+      }
+      // 해당 주문의 출고 로그 삭제
+      const shipLogs = logs.filter(l=>l.type==="출고"&&l.ref===orderId);
+      for (const sl of shipLogs) {
+        await db.deleteLog(sl.id);
+      }
+      setLogs(p=>p.filter(l=>!(l.type==="출고"&&l.ref===orderId)));
+      await db.updateOrder(orderId, { status: newStatus });
+      setOrders(p=>p.map(o=>o.id===orderId?{...o,status:newStatus}:o));
+      showToast(`출고 취소 → ${newStatus}`);
+    } catch(e) { console.error("출고 취소 실패:", e); showToast("출고 취소 실패","error"); }
+  };
+
   const exportOrders = () => {
     const rows = orders.flatMap(o=>o.items.map(it=>({주문번호:o.id,날짜:o.date,고객명:o.customer,원단:it.fabric,색상:it.color,수량:it.qty,결제:o.payment,상태:o.status,배송지:o.address||"",메모:o.note||""})));
     const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new();
@@ -502,6 +531,7 @@ function ErpApp() {
                             return (
                               <button key={s} onClick={()=>{
                                 if(s==="출고완료"){ handleShipOut(o.id); }
+                                else if(o.status==="출고완료"){ handleUndoShipOut(o.id, s); }
                                 else { setOrders(p=>p.map(x=>x.id===o.id?{...x,status:s}:x)); db.updateOrder(o.id,{status:s}); }
                               }} style={{padding:"4px 10px",fontSize:11,borderRadius:20,border:`1px solid ${o.status===s?c:G.border}`,background:o.status===s?bg:"transparent",color:o.status===s?c:G.creamMuted,cursor:"pointer",fontFamily:S,fontWeight:o.status===s?700:400}}>
                                 {s}
