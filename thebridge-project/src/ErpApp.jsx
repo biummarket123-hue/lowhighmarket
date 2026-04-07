@@ -72,18 +72,20 @@ function ErpApp() {
   useEffect(()=>{
     (async()=>{
       try {
-        const [o,i,l,c,m] = await Promise.all([
+        const [o,i,l,c,m,s] = await Promise.all([
           db.fetchOrders(),
           db.fetchInventory(),
           db.fetchLogs(),
           db.fetchCustomers(),
           db.fetchManagers(),
+          db.fetchSettings(),
         ]);
         if (o.length) setOrders(o);
         if (i.length) setInv(i);
         if (l.length) setLogs(l);
         if (c.length) setCustomers(c);
         if (m.length) setManagers(m);
+        if (s) { setSettings(prev=>({...prev,...s})); localStorage.setItem(SETTINGS_KEY, JSON.stringify({...savedSettings,...s})); }
       } catch(e) {
         console.error("Supabase load error:", e);
       } finally {
@@ -92,8 +94,11 @@ function ErpApp() {
     })();
   },[]);
 
-  // ── settings는 localStorage 유지 (기기별 설정) ─────────────
-  useEffect(()=>{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); },[settings]);
+  // ── settings: localStorage + Supabase 동기화 ─────────────
+  useEffect(()=>{
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    db.saveSettings(settings).catch(e=>console.error("Settings save error:", e));
+  },[settings]);
 
   const showToast = (msg, type="ok") => {
     setToast({msg,type});

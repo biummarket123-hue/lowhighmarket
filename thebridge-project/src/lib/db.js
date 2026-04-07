@@ -205,6 +205,26 @@ export async function removeManager(name) {
   if (error) throw error;
 }
 
+// ── Settings ─────────────────────────────────────────────────
+export async function fetchSettings() {
+  const { data, error } = await supabase
+    .from("settings")
+    .select("data")
+    .eq("id", "main")
+    .single();
+  if (error) return null;
+  return data?.data || null;
+}
+
+export async function saveSettings(settings) {
+  const { error } = await supabase.from("settings").upsert({
+    id: "main",
+    data: settings,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
+
 // ── Bulk: clear all data ──────────────────────────────────────
 export async function clearAllData() {
   await supabase.from("orders").delete().neq("id", "00000000-0000-0000-0000-000000000000");
