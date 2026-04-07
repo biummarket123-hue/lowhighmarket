@@ -1,5 +1,5 @@
 import { useState } from "react";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 
 function ExcelImport({orders, setOrders, customers, setCustomers, showToast}) {
   const SF="'Noto Serif KR',serif";

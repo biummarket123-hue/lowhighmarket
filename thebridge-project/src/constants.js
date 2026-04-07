@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 
 const REWARDS_DATA = {points:[],free:[],events:[],date:""};
 const INIT_DATA = {orders:[],customers:[],monthly:[],online:[],fabrics:[],staff:[]};
