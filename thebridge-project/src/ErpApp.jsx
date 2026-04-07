@@ -531,7 +531,7 @@ function ErpApp() {
               const q = orderSearch.trim().toLowerCase();
               const f = orderFilter;
               const filtered = orders.filter(o=>{
-                if(q && !(o.customer||"").toLowerCase().includes(q) && !(o.note||"").toLowerCase().includes(q) && !(o.items||[]).some(it=>(it.fabric||"").toLowerCase().includes(q)||(it.color||"").toLowerCase().includes(q))) return false;
+                if(q && !(o.customer||"").toLowerCase().includes(q) && !(o.phone||"").includes(q) && !(o.note||"").toLowerCase().includes(q) && !(o.items||[]).some(it=>(it.fabric||"").toLowerCase().includes(q)||(it.color||"").toLowerCase().includes(q))) return false;
                 if(f.dateFrom && o.date && o.date.replace(/\./g,"-")<f.dateFrom) return false;
                 if(f.dateTo && o.date && o.date.replace(/\./g,"-")>f.dateTo) return false;
                 if(f.manager && o.manager!==f.manager) return false;
