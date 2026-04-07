@@ -164,29 +164,28 @@ function ErpApp() {
     const targets = orders.filter(o=>selIds.includes(o.id));
     if (!targets.length) { showToast("선택된 주문이 없습니다","error"); return; }
     const fmt = COLS[courier]||COLS["CJ대한통운"];
-    const rows = targets.map(o=>fmt.row(o,settings,customers));
-    const ws=XLSX.utils.json_to_sheet(rows);
+    const dataRows = targets.map(o=>{
+      const r = fmt.row(o,settings,customers);
+      return fmt.cols.map(col=>r[col]!=null?r[col]:"");
+    });
+    const aoa = [fmt.cols, ...dataRows];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
     ws["!cols"]=(fmt.widths||fmt.cols.map(()=>22)).map(w=>({wch:w}));
-    // 헤더 스타일 적용 (보라색 헤더 + 검정 데이터)
     const purpleSet = new Set(fmt.purple||[]);
-    const rowCount = rows.length;
     fmt.cols.forEach((_,ci)=>{
-      // 헤더: 보라색 or 검정, 배경 연회색, 볼드, 가운데정렬
+      // 헤더 스타일
       const hAddr = XLSX.utils.encode_cell({r:0,c:ci});
-      if(ws[hAddr]){
-        const isPurple = purpleSet.has(ci);
-        ws[hAddr].s = {
-          font:{ bold:true, color:{ rgb: isPurple ? "7030A0" : "000000" } },
-          fill:{ fgColor:{ rgb:"F0F0F0" } },
-          alignment:{ horizontal:"center" },
-        };
-      }
+      if(!ws[hAddr]) ws[hAddr]={v:"",t:"s"};
+      ws[hAddr].s = {
+        font:{ bold:true, color:{ rgb: purpleSet.has(ci) ? "7030A0" : "000000" } },
+        fill:{ fgColor:{ rgb:"F0F0F0" } },
+        alignment:{ horizontal:"center" },
+      };
       // 데이터 행: 검정색
-      for(let ri=1;ri<=rowCount;ri++){
+      for(let ri=1;ri<aoa.length;ri++){
         const dAddr = XLSX.utils.encode_cell({r:ri,c:ci});
-        if(ws[dAddr]){
-          ws[dAddr].s = { font:{ color:{ rgb:"000000" } } };
-        }
+        if(!ws[dAddr]) ws[dAddr]={v:"",t:"s"};
+        ws[dAddr].s = { font:{ color:{ rgb:"000000" } } };
       }
     });
     const wb=XLSX.utils.book_new();
