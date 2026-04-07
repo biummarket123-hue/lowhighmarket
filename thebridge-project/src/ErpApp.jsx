@@ -46,9 +46,18 @@ function ErpApp() {
   const [settings, setSettings] = useState({...DEFAULT_SETTINGS, ...savedSettings});
   const [managers, setManagers] = useState(DEFAULT_MANAGERS);
   const [barcodeDB, setBarcodeDB] = useState({});
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState(()=>localStorage.getItem("erp_theme")||"dark");
   const [toast, setToast] = useState({msg:"",type:"ok"});
-  const T = G;
+  const L = {
+    bg:"#F5F0E8", surface:"#FFFFFF", card:"#FFFFFF",
+    border:"#D9D0C4", copper:"#B06830", copperLight:"#C8794A",
+    copperGlow:"rgba(176,104,48,0.12)", cream:"#1A1612", creamMuted:"#6B5E50",
+    white:"#FFFFFF", green:"#3D8B55", greenBg:"rgba(61,139,85,0.10)",
+    red:"#C05A4A", redBg:"rgba(192,90,74,0.10)", yellow:"#A67E2E",
+    yellowBg:"rgba(166,126,46,0.10)", blue:"#3A6E9A", blueBg:"rgba(58,110,154,0.10)",
+    purple:"#7A5AA8",
+  };
+  const T = theme==="dark" ? G : L;
   const [editingOrder, setEditingOrder] = useState(null);
   const [editingInv, setEditingInv] = useState(null);
   const [editingCust, setEditingCust] = useState(null);
@@ -238,33 +247,33 @@ function ErpApp() {
   return (
     <div className="erp-root" style={{fontFamily:S,background:T.bg,minHeight:"100vh",color:T.cream,maxWidth:600,margin:"0 auto"}}>
       {!loaded && (
-        <div style={{position:"fixed",inset:0,background:G.bg,zIndex:999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
-          <div style={{fontFamily:SF,fontSize:24,fontWeight:800,color:G.copper}}>로하이마켓 ERP</div>
-          <div style={{fontSize:11,color:G.creamMuted}}>v2.1</div>
-          <div style={{width:40,height:40,border:`3px solid ${G.copper}30`,borderTop:`3px solid ${G.copper}`,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
-          <div style={{fontSize:12,color:G.creamMuted}}>데이터 불러오는 중...</div>
+        <div style={{position:"fixed",inset:0,background:T.bg,zIndex:999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+          <div style={{fontFamily:SF,fontSize:24,fontWeight:800,color:T.copper}}>로하이마켓 ERP</div>
+          <div style={{fontSize:11,color:T.creamMuted}}>v2.1</div>
+          <div style={{width:40,height:40,border:`3px solid ${T.copper}30`,borderTop:`3px solid ${T.copper}`,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+          <div style={{fontSize:12,color:T.creamMuted}}>데이터 불러오는 중...</div>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       )}
 
       {/* ── 구버전 안내 화면 ── */}
       {loaded && newerUrl && (
-        <div style={{position:"fixed",inset:0,background:G.bg,zIndex:998,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20,padding:24,textAlign:"center"}}>
+        <div style={{position:"fixed",inset:0,background:T.bg,zIndex:998,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:20,padding:24,textAlign:"center"}}>
           <div style={{fontSize:48}}>🔄</div>
-          <div style={{fontFamily:SF,fontSize:22,fontWeight:800,color:G.copper}}>새 버전이 있습니다</div>
-          <div style={{fontSize:14,color:G.creamMuted,lineHeight:1.8}}>
+          <div style={{fontFamily:SF,fontSize:22,fontWeight:800,color:T.copper}}>새 버전이 있습니다</div>
+          <div style={{fontSize:14,color:T.creamMuted,lineHeight:1.8}}>
             현재 버전은 구버전입니다.<br/>
             최신 버전으로 이동해서<br/>
-            <b style={{color:G.cream}}>동일한 데이터</b>를 이용하세요.
+            <b style={{color:T.cream}}>동일한 데이터</b>를 이용하세요.
           </div>
           <a href={newerUrl} target="_blank" rel="noreferrer"
-            style={{display:"block",width:"100%",maxWidth:320,padding:"16px",borderRadius:12,background:`linear-gradient(135deg,${G.copper},${G.copperLight})`,color:G.white,fontWeight:800,fontSize:16,textDecoration:"none",boxShadow:`0 6px 30px ${G.copperGlow}`,fontFamily:S}}>
+            style={{display:"block",width:"100%",maxWidth:320,padding:"16px",borderRadius:12,background:`linear-gradient(135deg,${T.copper},${T.copperLight})`,color:T.white,fontWeight:800,fontSize:16,textDecoration:"none",boxShadow:`0 6px 30px ${T.copperGlow}`,fontFamily:S}}>
             🚀 최신 버전으로 이동
           </a>
-          <button onClick={()=>setNewerUrl(null)} style={{padding:"10px 20px",borderRadius:10,border:`1px solid ${G.border}`,background:"transparent",color:G.creamMuted,fontFamily:S,fontSize:13,cursor:"pointer"}}>
+          <button onClick={()=>setNewerUrl(null)} style={{padding:"10px 20px",borderRadius:10,border:`1px solid ${T.border}`,background:"transparent",color:T.creamMuted,fontFamily:S,fontSize:13,cursor:"pointer"}}>
             이 버전으로 계속 사용
           </button>
-          <div style={{fontSize:10,color:G.creamMuted}}>현재: {APP_VERSION}</div>
+          <div style={{fontSize:10,color:T.creamMuted}}>현재: {APP_VERSION}</div>
         </div>
       )}
 
@@ -759,14 +768,14 @@ function ErpApp() {
 
         {tab===6 && (
           <div>
-            <div style={{fontFamily:SF,fontSize:22,fontWeight:800,marginBottom:20,color:G.cream}}>설정</div>
+            <div style={{fontFamily:SF,fontSize:22,fontWeight:800,marginBottom:20,color:T.cream}}>설정</div>
 
             {/* 테마 */}
             <Card style={{marginBottom:14,background:T.card,border:`1px solid ${T.border}`}}>
               <SecTitle>화면 테마</SecTitle>
               <div style={{display:"flex",gap:10}}>
                 {["dark","light"].map(th=>(
-                  <button key={th} onClick={()=>setTheme(th)} style={{
+                  <button key={th} onClick={()=>{setTheme(th);localStorage.setItem("erp_theme",th);}} style={{
                     flex:1,padding:"14px 0",borderRadius:12,cursor:"pointer",fontFamily:S,fontWeight:700,fontSize:13,
                     border:`2px solid ${theme===th?T.copper:T.border}`,
                     background:theme===th?T.copperGlow:(th==="dark"?"#0D0B09":"#F5F0E8"),
