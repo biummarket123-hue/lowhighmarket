@@ -125,6 +125,7 @@ function ErpApp() {
     const COLS = {
       "CJ대한통운":{
         cols:["받는분성명","받는분전화번호","받는분기타연락처","받는분우편번호","받는분주소(전체, 분할)","배송메세지1","배송메세지2","품목명"],
+        widths:[15,18,15,12,73,15,15,20],
         purple:[0,1,4],
         row:(o,s,c)=>({
           "받는분성명":o.customer,
@@ -165,18 +166,28 @@ function ErpApp() {
     const fmt = COLS[courier]||COLS["CJ대한통운"];
     const rows = targets.map(o=>fmt.row(o,settings,customers));
     const ws=XLSX.utils.json_to_sheet(rows);
-    ws["!cols"]=fmt.cols.map(()=>({wch:22}));
-    // 헤더 스타일 적용
+    ws["!cols"]=(fmt.widths||fmt.cols.map(()=>22)).map(w=>({wch:w}));
+    // 헤더 스타일 적용 (보라색 헤더 + 검정 데이터)
     const purpleSet = new Set(fmt.purple||[]);
+    const rowCount = rows.length;
     fmt.cols.forEach((_,ci)=>{
-      const addr = XLSX.utils.encode_cell({r:0,c:ci});
-      if(!ws[addr]) return;
-      const isPurple = purpleSet.has(ci);
-      ws[addr].s = {
-        font:{ bold:true, color:{ rgb: isPurple ? "7030A0" : "000000" } },
-        fill:{ fgColor:{ rgb:"F0F0F0" } },
-        alignment:{ horizontal:"center" },
-      };
+      // 헤더: 보라색 or 검정, 배경 연회색, 볼드, 가운데정렬
+      const hAddr = XLSX.utils.encode_cell({r:0,c:ci});
+      if(ws[hAddr]){
+        const isPurple = purpleSet.has(ci);
+        ws[hAddr].s = {
+          font:{ bold:true, color:{ rgb: isPurple ? "7030A0" : "000000" } },
+          fill:{ fgColor:{ rgb:"F0F0F0" } },
+          alignment:{ horizontal:"center" },
+        };
+      }
+      // 데이터 행: 검정색
+      for(let ri=1;ri<=rowCount;ri++){
+        const dAddr = XLSX.utils.encode_cell({r:ri,c:ci});
+        if(ws[dAddr]){
+          ws[dAddr].s = { font:{ color:{ rgb:"000000" } } };
+        }
+      }
     });
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"송장출력");
