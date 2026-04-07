@@ -26,7 +26,7 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
 
     try {
       // 주문 저장 (id는 Supabase가 자동생성)
-      const saved = await db.insertOrder({...t, customer:parsed.customer||"미확인", phone:parsed.phone, items:parsed.items||[], payment:parsed.payment||"미입금", address:parsed.address, addressDetail:parsed.address_detail, link:parsed.link, note:parsed.note, status:"접수", manager:activeManager||""});
+      const saved = await db.insertOrder({...t, customer:parsed.customer||"미확인", phone:parsed.phone, items:parsed.items||[], payment:parsed.payment||"미입금", address:parsed.address, addressDetail:parsed.address_detail, links:parsed.links||[], note:parsed.note, status:"접수", manager:activeManager||""});
       setOrders(p=>[saved,...p]);
 
       for (const item of (parsed.items||[])) {
@@ -186,7 +186,7 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
               ...(parsed.phone?[{l:"연락처",v:<span style={{color:G.creamMuted}}>{parsed.phone}</span>}]:[]),
               {l:"결제", v:<Tag c={pC(parsed.payment)[0]} bg={pC(parsed.payment)[1]}>{parsed.payment||"미입금"}</Tag>},
               ...(parsed.address?[{l:"배송지",v:<span style={{fontSize:12,color:G.creamMuted}}>{parsed.address}{parsed.address_detail ? ` ${parsed.address_detail}` : ""}</span>}]:[]),
-              ...(parsed.link?[{l:"링크",v:<a href={parsed.link} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:G.blue,textDecoration:"underline"}}>{parsed.link.length>40?parsed.link.slice(0,40)+"...":parsed.link}</a>}]:[]),
+              ...((parsed.links||[]).map((lnk,i)=>({l:i===0?"링크":"",v:<a key={i} href={lnk} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:G.blue,textDecoration:"underline"}}>{lnk.length>40?lnk.slice(0,40)+"...":lnk}</a>}))),
               ...(parsed.note?[{l:"메모",v:<span style={{fontSize:12,color:G.creamMuted}}>{parsed.note}</span>}]:[]),
             ].map(({l,v},i)=>(
               <div key={l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 14px",borderTop:i>0?`1px solid ${G.border}`:"none",gap:12}}>
