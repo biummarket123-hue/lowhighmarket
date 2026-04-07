@@ -457,7 +457,7 @@ function ErpApp() {
                       {o.note && o.note.trim() && o.note.trim()!=="None" && (
                         <div style={{fontSize:12,color:G.cream,marginBottom:10,padding:"6px 10px",background:G.surface,borderRadius:7,border:`1px solid ${G.border}`,display:"flex",gap:6,alignItems:"flex-start"}}>
                           <span style={{color:G.yellow,fontSize:13,flexShrink:0}}>💬</span>
-                          <span style={{lineHeight:1.6}}>{o.note}</span>
+                          <span style={{lineHeight:1.6,whiteSpace:"pre-wrap"}}>{o.note}</span>
                         </div>
                       )}
                       {!selectMode && <>
