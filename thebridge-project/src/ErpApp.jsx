@@ -135,7 +135,7 @@ function ErpApp() {
           "받는분주소(전체, 분할)":o.address||"",
           "배송메세지1":"",
           "배송메세지2":"",
-          "품목명":o.items.map(i=>i.fabric+(i.color?" "+i.color:"")+(i.qty?" "+i.qty+"마":"")).join(", "),
+          "품목명":"",
         })
       },
       "경동화물":{
