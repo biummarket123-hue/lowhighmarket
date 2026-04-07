@@ -534,12 +534,11 @@ function ErpApp() {
 
             {/* ── 바코드 ── */}
             {ioTab==="barcode" && (
-              <BarcodeTab
-                inv={inv} setInv={setInv}
-                logs={logs} setLogs={setLogs}
-                barcodeDB={barcodeDB} setBarcodeDB={setBarcodeDB}
-                showToast={showToast}
-              />
+              <Card style={{padding:"40px 20px",textAlign:"center",background:T.card,border:`1px solid ${T.border}`}}>
+                <div style={{fontSize:32,marginBottom:12}}>▐▌</div>
+                <div style={{fontSize:15,fontWeight:700,color:G.cream,marginBottom:6}}>서비스 준비중</div>
+                <div style={{fontSize:12,color:G.creamMuted}}>바코드 기능은 현재 준비중입니다.</div>
+              </Card>
             )}
 
             {/* ── 자동출고 ── */}
