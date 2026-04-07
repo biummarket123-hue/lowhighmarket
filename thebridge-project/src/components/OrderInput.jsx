@@ -29,19 +29,6 @@ function OrderInput({inv, setInv, orders, setOrders, logs, setLogs, customers, s
       const saved = await db.insertOrder({...t, customer:parsed.customer||"미확인", phone:parsed.phone, items:parsed.items||[], payment:parsed.payment||"미입금", address:parsed.address, addressDetail:parsed.address_detail, links:parsed.links||[], note:parsed.note, status:"접수", manager:activeManager||""});
       setOrders(p=>[saved,...p]);
 
-      for (const item of (parsed.items||[])) {
-        // 재고 차감
-        const invItem = inv.find(i=>i.fabric===item.fabric&&i.color===item.color);
-        if (invItem) {
-          const newStock = Math.max(0, invItem.stock - item.qty);
-          await db.updateInventoryItem(invItem.id, { stock: newStock });
-          setInv(p=>p.map(i=>i.id===invItem.id?{...i,stock:newStock}:i));
-        }
-        // 출고 로그
-        const log = await db.insertLog({...t, type:"출고", fabric:item.fabric, color:item.color, qty:item.qty, ref:saved.id, note:`주문출고 — ${saved.customer}`});
-        if (log) setLogs(p=>[log,...p]);
-      }
-
       // 고객 등록/업데이트
       if (parsed.customer) {
         const ex = customers.find(c=>c.name===parsed.customer);

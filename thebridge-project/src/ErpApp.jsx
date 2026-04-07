@@ -120,6 +120,27 @@ function ErpApp() {
     }
   },[inv]);
 
+  const handleShipOut = async (orderId) => {
+    const order = orders.find(o=>o.id===orderId);
+    if (!order || order.status==="출고완료") return;
+    const t = nowT();
+    try {
+      for (const item of (order.items||[])) {
+        const invItem = inv.find(i=>i.fabric===item.fabric&&i.color===item.color);
+        if (invItem) {
+          const newStock = Math.max(0, invItem.stock - item.qty);
+          await db.updateInventoryItem(invItem.id, { stock: newStock });
+          setInv(p=>p.map(i=>i.id===invItem.id?{...i,stock:newStock}:i));
+        }
+        const log = await db.insertLog({...t, type:"출고", fabric:item.fabric, color:item.color||"", qty:item.qty, ref:order.id, note:`판매출고 — ${order.customer}`});
+        if (log) setLogs(p=>[log,...p]);
+      }
+      await db.updateOrder(orderId, { status:"출고완료" });
+      setOrders(p=>p.map(o=>o.id===orderId?{...o,status:"출고완료"}:o));
+      showToast("출고 처리 완료");
+    } catch(e) { console.error("출고 실패:", e); showToast("출고 실패","error"); }
+  };
+
   const exportOrders = () => {
     const rows = orders.flatMap(o=>o.items.map(it=>({주문번호:o.id,날짜:o.date,고객명:o.customer,원단:it.fabric,색상:it.color,수량:it.qty,결제:o.payment,상태:o.status,배송지:o.address||"",메모:o.note||""})));
     const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new();
@@ -479,7 +500,10 @@ function ErpApp() {
                           {["접수","준비중","출고완료"].map(s=>{
                             const [c,bg]=sC(s);
                             return (
-                              <button key={s} onClick={()=>setOrders(p=>p.map(x=>x.id===o.id?{...x,status:s}:x))} style={{padding:"4px 10px",fontSize:11,borderRadius:20,border:`1px solid ${o.status===s?c:G.border}`,background:o.status===s?bg:"transparent",color:o.status===s?c:G.creamMuted,cursor:"pointer",fontFamily:S,fontWeight:o.status===s?700:400}}>
+                              <button key={s} onClick={()=>{
+                                if(s==="출고완료"){ handleShipOut(o.id); }
+                                else { setOrders(p=>p.map(x=>x.id===o.id?{...x,status:s}:x)); db.updateOrder(o.id,{status:s}); }
+                              }} style={{padding:"4px 10px",fontSize:11,borderRadius:20,border:`1px solid ${o.status===s?c:G.border}`,background:o.status===s?bg:"transparent",color:o.status===s?c:G.creamMuted,cursor:"pointer",fontFamily:S,fontWeight:o.status===s?700:400}}>
                                 {s}
                               </button>
                             );
