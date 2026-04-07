@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { G, SF, S, INIT_DATA, baseInp, dlXlsx, sC, pC } from "./constants.js";
 import { Tag, SecTitle, Card, Empty, Toast, PrimaryBtn, GhostBtn, FLabel, ConfirmModal, EditOrderModal, EditInvModal, EditCustModal, ShippingModal } from "./components/UI.jsx";
 import OrderInput from "./components/OrderInput.jsx";
@@ -124,7 +124,8 @@ function ErpApp() {
   const exportShipping = (selIds, courier) => {
     const COLS = {
       "CJ대한통운":{
-        cols:["예약구분","집하예정일","받는분성명","받는분전화번호","받는분기타연락처","받는분우편번호","받는분주소","운송장번호","고객주문번호","품목명","박스수량","박스타입","기본운임","배송메세지1","배송메세지2"],
+        cols:["예약구분","집하예정일","받는분성명","받는분전화번호","받는분기타연락처","받는분우편번호","받는분주소(전체, 분할)","운송장번호","고객주문번호","품목명","박스수량","박스타입","기본운임","배송메세지1","배송메세지2","품목명2"],
+        purple:[2,3,6],
         row:(o,s,c)=>({
           "예약구분":"",
           "집하예정일":"",
@@ -132,15 +133,16 @@ function ErpApp() {
           "받는분전화번호":o.phone||c.find(x=>x.name===o.customer)?.phone||"",
           "받는분기타연락처":"",
           "받는분우편번호":"",
-          "받는분주소":o.address||"",
+          "받는분주소(전체, 분할)":o.address||"",
           "운송장번호":"",
           "고객주문번호":o.id,
           "품목명":o.items.map(i=>i.fabric+(i.color?" "+i.color:"")).join(" / "),
-          "박스수량":1,
-          "박스타입":"BOX",
+          "박스수량":"",
+          "박스타입":"",
           "기본운임":"",
-          "배송메세지1":o.note||"",
+          "배송메세지1":"",
           "배송메세지2":"",
+          "품목명2":"",
         })
       },
       "경동화물":{
@@ -172,6 +174,18 @@ function ErpApp() {
     const rows = targets.map(o=>fmt.row(o,settings,customers));
     const ws=XLSX.utils.json_to_sheet(rows);
     ws["!cols"]=fmt.cols.map(()=>({wch:22}));
+    // 헤더 스타일 적용
+    const purpleSet = new Set(fmt.purple||[]);
+    fmt.cols.forEach((_,ci)=>{
+      const addr = XLSX.utils.encode_cell({r:0,c:ci});
+      if(!ws[addr]) return;
+      const isPurple = purpleSet.has(ci);
+      ws[addr].s = {
+        font:{ bold:true, color:{ rgb: isPurple ? "7030A0" : "000000" } },
+        fill:{ fgColor:{ rgb:"F0F0F0" } },
+        alignment:{ horizontal:"center" },
+      };
+    });
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"송장출력");
     dlXlsx(wb,`로하이마켓_${courier}_송장.xlsx`);
