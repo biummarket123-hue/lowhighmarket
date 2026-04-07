@@ -12,23 +12,7 @@ import * as db from "./lib/db.js";
 
 function ErpApp() {
   // ── 기본값 ─────────────────────────────────────────────────
-  const DEFAULT_INV = [
-    {id:1,fabric:"린넨코튼",color:"",stock:421},
-    {id:2,fabric:"린넨코튼15수",color:"",stock:251},
-    {id:3,fabric:"강화소창",color:"",stock:93},
-    {id:4,fabric:"린넨100",color:"",stock:122},
-    {id:5,fabric:"라미36수",color:"",stock:107},
-    {id:6,fabric:"쉬폰",color:"",stock:370},
-    {id:7,fabric:"무명13수",color:"",stock:189},
-    {id:8,fabric:"마8수",color:"",stock:181},
-    {id:9,fabric:"트위드",color:"",stock:229},
-    {id:10,fabric:"라미60수",color:"",stock:56},
-    {id:11,fabric:"린넨",color:"",stock:103},
-    {id:12,fabric:"린넨코튼 튤립",color:"",stock:72},
-    {id:13,fabric:"뜨왈",color:"",stock:70},
-    {id:14,fabric:"13수 무명",color:"",stock:106},
-    {id:15,fabric:"린넨코튼 15수",color:"",stock:102},
-  ];
+  const DEFAULT_INV = [];
   const DEFAULT_SETTINGS = {kakaoWebhook:"",lowStockAlert:10,kakaoEnabled:false,senderName:"로하이마켓",senderPhone:"",senderAddr:"서울 중구 동대문 원단시장",anthropicKey:""};
   const DEFAULT_MANAGERS = ["실장님","고문님","장부장님","송미송","김민주","손희우"];
 
