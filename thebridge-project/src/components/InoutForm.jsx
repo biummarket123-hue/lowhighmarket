@@ -104,7 +104,7 @@ function InoutForm({inv, setInv, logs, setLogs, showToast}) {
 }
 
 // ════════════════ 자동출고 컴포넌트 ══════════════════════════
-function AutoShipOut({orders, setOrders, inv, setInv, logs, setLogs, showToast}) {
+function AutoShipOut({orders, setOrders, inv, setInv, logs, setLogs, showToast, onShipDone}) {
   const [selOrders, setSelOrders] = useState([]);
   const pending = orders.filter(o=>o.status!=="출고완료");
 
@@ -132,6 +132,7 @@ function AutoShipOut({orders, setOrders, inv, setInv, logs, setLogs, showToast})
       setLogs(p=>[...newLogs,...p]);
       setSelOrders([]);
       showToast(`${selOrders.length}건 자동출고 완료`);
+      if (onShipDone) onShipDone();
     } catch(e) { console.error("출고 실패:", e); showToast("출고 실패","error"); }
   };
 

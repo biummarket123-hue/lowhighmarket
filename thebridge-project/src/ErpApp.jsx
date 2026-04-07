@@ -562,6 +562,7 @@ function ErpApp() {
                 inv={inv} setInv={setInv}
                 logs={logs} setLogs={setLogs}
                 showToast={showToast}
+                onShipDone={()=>setIoTab("history")}
               />
             )}
 
