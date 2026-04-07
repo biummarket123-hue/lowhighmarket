@@ -540,7 +540,7 @@ function ErpApp() {
                             );
                           })}
                           {o.payment!=="입금완료" && (
-                            <button onClick={()=>{setOrders(p=>p.map(x=>x.id===o.id?{...x,payment:"입금완료"}:x));kakaoAlert(`✅ 입금확인\n${o.id} — ${o.customer}`);showToast("입금 확인 완료");}} style={{marginLeft:"auto",padding:"4px 12px",fontSize:11,borderRadius:20,border:`1px solid ${G.green}`,background:G.greenBg,color:G.green,cursor:"pointer",fontFamily:S,fontWeight:700}}>
+                            <button onClick={()=>{db.updateOrder(o.id,{payment:"입금완료"});setOrders(p=>p.map(x=>x.id===o.id?{...x,payment:"입금완료"}:x));kakaoAlert(`✅ 입금확인\n${o.id} — ${o.customer}`);showToast("입금 확인 완료");}} style={{marginLeft:"auto",padding:"4px 12px",fontSize:11,borderRadius:20,border:`1px solid ${G.green}`,background:G.greenBg,color:G.green,cursor:"pointer",fontFamily:S,fontWeight:700}}>
                               입금확인 ✓
                             </button>
                           )}
