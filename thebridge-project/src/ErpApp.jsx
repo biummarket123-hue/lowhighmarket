@@ -559,7 +559,7 @@ function ErpApp() {
                               <span style={{fontWeight:800,fontSize:16}}>{o.customer}</span>
                               {o.manager && <span style={{fontSize:10,color:G.creamMuted,background:G.surface,padding:"1px 6px",borderRadius:4}}>{o.manager}</span>}
                             </div>
-                            <span style={{fontSize:11,color:G.creamMuted}}>{o.date}{o.phone ? ` · ${o.phone}` : ""}</span>
+                            <span style={{fontSize:11,color:G.creamMuted}}>{o.date}{(o.phone || customers.find(x=>x.name===o.customer)?.phone) ? ` · ${o.phone || customers.find(x=>x.name===o.customer)?.phone}` : ""}</span>
                           </div>
                         </div>
                         <div style={{display:"flex",flexDirection:"column",gap:4,alignItems:"flex-end",flexShrink:0}}>
