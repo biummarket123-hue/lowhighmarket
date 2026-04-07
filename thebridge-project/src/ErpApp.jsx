@@ -453,6 +453,7 @@ function ErpApp() {
                         ))}
                       </div>
                       {o.address && <div style={{fontSize:11,color:G.creamMuted,marginBottom:6}}>📦 {o.address}{o.addressDetail ? ` ${o.addressDetail}` : ""}</div>}
+                      {o.link && <div style={{fontSize:11,marginBottom:6}}><a href={o.link} target="_blank" rel="noopener noreferrer" style={{color:G.blue,textDecoration:"underline"}}>🔗 첨부 링크</a></div>}
                       {o.note && o.note.trim() && o.note.trim()!=="None" && (
                         <div style={{fontSize:12,color:G.cream,marginBottom:10,padding:"6px 10px",background:G.surface,borderRadius:7,border:`1px solid ${G.border}`,display:"flex",gap:6,alignItems:"flex-start"}}>
                           <span style={{color:G.yellow,fontSize:13,flexShrink:0}}>💬</span>
