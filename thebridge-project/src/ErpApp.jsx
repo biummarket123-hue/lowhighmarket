@@ -140,23 +140,25 @@ function ErpApp() {
       },
       "경동화물":{
         cols:["받는분","주소","상세주소","운송장번호","고객사주문번호","우편번호","도착영업소","전화번호","기타전화번호","선불후불","품목명","수량","포장상태","가로","세로","높이","무게","개별단가","배송운임","기타운임","별도운임","할증운임","도서운임","메모"],
+        widths:[15,41,42,11,15,9,11,14,13,9,7,5,9,5,5,5,5,9,10,9,9,9,9,26],
+        blue:[0,1,2,7,12,18],
         row:(o,s,c)=>({
           "받는분":o.customer,
           "주소":o.address||"",
           "상세주소":"",
           "운송장번호":"",
-          "고객사주문번호":o.id,
+          "고객사주문번호":"",
           "우편번호":"",
           "도착영업소":"",
           "전화번호":o.phone||c.find(x=>x.name===o.customer)?.phone||"",
           "기타전화번호":"",
           "선불후불":"선불",
-          "품목명":o.items.map(i=>i.fabric+(i.color?" "+i.color:"")).join(", "),
-          "수량":o.items.reduce((a,i)=>a+(i.qty||0),0),
-          "포장상태":"",
+          "품목명":"원단",
+          "수량":"",
+          "포장상태":"비닐",
           "가로":"","세로":"","높이":"","무게":"",
-          "개별단가":"",
-          "배송운임":"","기타운임":"","별도운임":"","할증운임":"","도서운임":"",
+          "개별단가":100,
+          "배송운임":"","기타운임":100,"별도운임":"","할증운임":"","도서운임":"",
           "메모":o.note||"",
         })
       },
@@ -172,16 +174,17 @@ function ErpApp() {
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     ws["!cols"]=(fmt.widths||fmt.cols.map(()=>22)).map(w=>({wch:w}));
     const purpleSet = new Set(fmt.purple||[]);
+    const blueSet = new Set(fmt.blue||[]);
     fmt.cols.forEach((_,ci)=>{
-      // 헤더 스타일
       const hAddr = XLSX.utils.encode_cell({r:0,c:ci});
       if(!ws[hAddr]) ws[hAddr]={v:"",t:"s"};
+      const isAccent = purpleSet.has(ci) || blueSet.has(ci);
+      const accentRgb = purpleSet.has(ci) ? "7030A0" : blueSet.has(ci) ? "0070C0" : "000000";
       ws[hAddr].s = {
-        font:{ bold:true, sz:13, color:{ rgb: purpleSet.has(ci) ? "7030A0" : "000000" } },
+        font:{ bold:isAccent, sz:13, color:{ rgb: accentRgb } },
         fill:{ fgColor:{ rgb:"F0F0F0" } },
         alignment:{ horizontal:"center", vertical:"center" },
       };
-      // 데이터 행: 검정색, 글씨 크기 13
       for(let ri=1;ri<aoa.length;ri++){
         const dAddr = XLSX.utils.encode_cell({r:ri,c:ci});
         if(!ws[dAddr]) ws[dAddr]={v:"",t:"s"};
