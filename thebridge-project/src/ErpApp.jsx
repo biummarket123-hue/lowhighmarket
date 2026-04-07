@@ -51,6 +51,9 @@ function ErpApp() {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [selectMode, setSelectMode] = useState(false);
   const [activeManager, setActiveManager] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderFilter, setOrderFilter] = useState({dateFrom:"",dateTo:"",manager:"",status:"",payment:""});
+  const [showFilter, setShowFilter] = useState(false);
 
   // ── Supabase 초기 로드 ──────────────────────────────────────
   useEffect(()=>{
@@ -445,6 +448,66 @@ function ErpApp() {
               </div>
             </div>
 
+            {/* 검색 */}
+            <div style={{marginBottom:10}}>
+              <input value={orderSearch} onChange={e=>setOrderSearch(e.target.value)} placeholder="고객명, 원단, 메모 검색..." style={{...baseInp,background:T.surface,color:T.cream,border:`1px solid ${T.border}`}}/>
+            </div>
+
+            {/* 필터 토글 */}
+            <div style={{marginBottom:10}}>
+              <button onClick={()=>setShowFilter(f=>!f)} style={{fontSize:12,color:showFilter?G.copper:T.creamMuted,background:showFilter?G.copperGlow:"transparent",border:`1px solid ${showFilter?G.copper:T.border}`,borderRadius:8,padding:"6px 12px",cursor:"pointer",fontFamily:S,fontWeight:600}}>
+                🔍 필터 {showFilter?"▲":"▼"} {Object.values(orderFilter).filter(v=>v).length>0?`(${Object.values(orderFilter).filter(v=>v).length})`:""}
+              </button>
+              {Object.values(orderFilter).filter(v=>v).length>0 && (
+                <button onClick={()=>setOrderFilter({dateFrom:"",dateTo:"",manager:"",status:"",payment:""})} style={{fontSize:11,color:T.creamMuted,background:"transparent",border:"none",cursor:"pointer",fontFamily:S,marginLeft:6}}>초기화</button>
+              )}
+            </div>
+
+            {showFilter && (
+              <Card style={{marginBottom:12,background:T.card,border:`1px solid ${T.border}`}}>
+                <div style={{display:"flex",gap:8,marginBottom:10}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:11,color:T.creamMuted,marginBottom:4}}>시작일</div>
+                    <input type="date" value={orderFilter.dateFrom} onChange={e=>setOrderFilter(f=>({...f,dateFrom:e.target.value}))} style={{...baseInp,fontSize:12,background:T.surface,color:T.cream,border:`1px solid ${T.border}`}}/>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:11,color:T.creamMuted,marginBottom:4}}>종료일</div>
+                    <input type="date" value={orderFilter.dateTo} onChange={e=>setOrderFilter(f=>({...f,dateTo:e.target.value}))} style={{...baseInp,fontSize:12,background:T.surface,color:T.cream,border:`1px solid ${T.border}`}}/>
+                  </div>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:11,color:T.creamMuted,marginBottom:4}}>담당자</div>
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                    {["",  ...managers].map(m=>(
+                      <button key={m} onClick={()=>setOrderFilter(f=>({...f,manager:m}))} style={{padding:"4px 10px",fontSize:11,borderRadius:16,border:`1px solid ${orderFilter.manager===m?G.copper:T.border}`,background:orderFilter.manager===m?G.copperGlow:"transparent",color:orderFilter.manager===m?G.copper:T.creamMuted,cursor:"pointer",fontFamily:S,fontWeight:orderFilter.manager===m?700:400}}>
+                        {m||"전체"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:11,color:T.creamMuted,marginBottom:4}}>상태</div>
+                  <div style={{display:"flex",gap:5}}>
+                    {["","접수","준비중","출고완료"].map(s=>(
+                      <button key={s} onClick={()=>setOrderFilter(f=>({...f,status:s}))} style={{padding:"4px 10px",fontSize:11,borderRadius:16,border:`1px solid ${orderFilter.status===s?G.copper:T.border}`,background:orderFilter.status===s?G.copperGlow:"transparent",color:orderFilter.status===s?G.copper:T.creamMuted,cursor:"pointer",fontFamily:S,fontWeight:orderFilter.status===s?700:400}}>
+                        {s||"전체"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{fontSize:11,color:T.creamMuted,marginBottom:4}}>결제</div>
+                  <div style={{display:"flex",gap:5}}>
+                    {["","입금완료","미입금"].map(p=>(
+                      <button key={p} onClick={()=>setOrderFilter(f=>({...f,payment:p}))} style={{padding:"4px 10px",fontSize:11,borderRadius:16,border:`1px solid ${orderFilter.payment===p?G.copper:T.border}`,background:orderFilter.payment===p?G.copperGlow:"transparent",color:orderFilter.payment===p?G.copper:T.creamMuted,cursor:"pointer",fontFamily:S,fontWeight:orderFilter.payment===p?700:400}}>
+                        {p||"전체"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* 전체선택 바 */}
             {selectMode && (
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:G.copperGlow,borderRadius:10,border:`1px solid ${G.copper}40`,marginBottom:12}}>
@@ -464,9 +527,21 @@ function ErpApp() {
               </div>
             )}
 
-            {orders.length===0
-              ? <Empty text="등록된 주문이 없습니다" sub="카톡 주문장을 붙여넣어 시작하세요"/>
-              : orders.map(o=>{
+            {(()=>{
+              const q = orderSearch.trim().toLowerCase();
+              const f = orderFilter;
+              const filtered = orders.filter(o=>{
+                if(q && !(o.customer||"").toLowerCase().includes(q) && !(o.note||"").toLowerCase().includes(q) && !(o.items||[]).some(it=>(it.fabric||"").toLowerCase().includes(q)||(it.color||"").toLowerCase().includes(q))) return false;
+                if(f.dateFrom && o.date && o.date.replace(/\./g,"-")<f.dateFrom) return false;
+                if(f.dateTo && o.date && o.date.replace(/\./g,"-")>f.dateTo) return false;
+                if(f.manager && o.manager!==f.manager) return false;
+                if(f.status && o.status!==f.status) return false;
+                if(f.payment && o.payment!==f.payment) return false;
+                return true;
+              });
+              return filtered.length===0
+              ? <Empty text="검색 결과가 없습니다" sub={orders.length>0?"필터를 조정해보세요":"카톡 주문장을 붙여넣어 시작하세요"}/>
+              : filtered.map(o=>{
                   const isSelected = selectedOrders.includes(o.id);
                   return (
                     <Card key={o.id} style={{marginBottom:10,border:`1.5px solid ${isSelected?G.copper:G.border}`,background:isSelected?`${G.copper}08`:G.card,transition:"all 0.15s"}}>
@@ -543,7 +618,7 @@ function ErpApp() {
                     </Card>
                   );
                 })
-            }
+            })()}
 
             {/* 플로팅 송장 버튼 */}
             {selectMode && selectedOrders.length>0 && (
