@@ -145,7 +145,7 @@ function ErpApp() {
         row:(o,s,c)=>({
           "받는분":o.customer,
           "주소":o.address||"",
-          "상세주소":"",
+          "상세주소":o.addressDetail||"",
           "운송장번호":"",
           "고객사주문번호":"",
           "우편번호":"",
@@ -445,7 +445,7 @@ function ErpApp() {
                           </div>
                         ))}
                       </div>
-                      {o.address && <div style={{fontSize:11,color:G.creamMuted,marginBottom:6}}>📦 {o.address}</div>}
+                      {o.address && <div style={{fontSize:11,color:G.creamMuted,marginBottom:6}}>📦 {o.address}{o.addressDetail ? ` ${o.addressDetail}` : ""}</div>}
                       {o.note && o.note.trim() && o.note.trim()!=="None" && (
                         <div style={{fontSize:12,color:G.cream,marginBottom:10,padding:"6px 10px",background:G.surface,borderRadius:7,border:`1px solid ${G.border}`,display:"flex",gap:6,alignItems:"flex-start"}}>
                           <span style={{color:G.yellow,fontSize:13,flexShrink:0}}>💬</span>

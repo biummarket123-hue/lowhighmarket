@@ -42,7 +42,14 @@ const sC = s => s==="출고완료" ? [G.green,G.greenBg] : s==="준비중" ? [G.
 const pC = p => p==="입금완료" ? [G.green,G.greenBg] : [G.red,G.redBg];
 
 const PARSE_SYSTEM = `동대문 원단시장 카카오톡 주문 메시지 분석. 순수 JSON만 반환. 마크다운 없이.
-{"customer":"고객명","phone":"전화번호 또는 null","items":[{"fabric":"원단명","color":"색상","qty":숫자}],"payment":"입금완료|미입금","address":"주소 또는 null","note":"메모 또는 null"}
+{"customer":"고객명","phone":"전화번호 또는 null","items":[{"fabric":"원단명","color":"색상","qty":숫자}],"payment":"입금완료|미입금","address":"기본주소 또는 null","address_detail":"상세주소 또는 null","note":"메모 또는 null"}
+주소 파싱 규칙 (address와 address_detail을 반드시 분리):
+- address(기본주소): 시/도, 시/군/구, 읍/면/동, 로/길/번지까지
+- address_detail(상세주소): 아파트명+동+호수, 건물명+층+호수, 상가명 등 그 이후 부분
+예시:
+"경기도 성남시 분당구 성남대로 43번길 10 하나ez타워 6층 601호" → address:"경기도 성남시 분당구 성남대로 43번길 10", address_detail:"하나ez타워 6층 601호"
+"전남 목포시 남악1로16번길 10 옥암골드클래스 103-1502호" → address:"전남 목포시 남악1로16번길 10", address_detail:"옥암골드클래스 103-1502호"
+"서울 노원구 상계동 한글비석로 보람아파트1차 104동 1107호" → address:"서울 노원구 상계동 한글비석로", address_detail:"보람아파트1차 104동 1107호"
 이미지인 경우 화면에서 주문 정보를 직접 읽어서 파싱하세요.`;
 
 const isDev = import.meta.env.DEV;
