@@ -42,7 +42,14 @@ const sC = s => s==="출고완료" ? [G.green,G.greenBg] : s==="준비중" ? [G.
 const pC = p => p==="입금완료" ? [G.green,G.greenBg] : [G.red,G.redBg];
 
 const PARSE_SYSTEM = `동대문 원단시장 카카오톡 주문 메시지 분석. 순수 JSON만 반환. 마크다운 없이.
-{"customer":"고객명","phone":"전화번호 또는 null","items":[{"fabric":"원단명","color":"색상","qty":숫자}],"payment":"입금완료|미입금","address":"기본주소 또는 null","address_detail":"상세주소 또는 null","links":["URL링크들 배열, 없으면 빈배열"],"note":"메모 또는 null"}
+{"customer":"고객명","phone":"전화번호 또는 null","items":[{"fabric":"원단명","color":"색상/번호","qty":숫자}],"payment":"입금완료|미입금","address":"기본주소 또는 null","address_detail":"상세주소 또는 null","links":["URL링크들 배열, 없으면 빈배열"],"note":"메모 또는 null"}
+
+items 파싱 규칙 (매우 중요):
+- 여러 색상/번호가 묶여 있으면 반드시 각각 개별 항목으로 분리해라. 절대 합치지 마라.
+- "1,2번각 3마씩" → items 2개: {fabric:"린넨코튼",color:"1번",qty:3}, {fabric:"린넨코튼",color:"2번",qty:3}
+- "화이트,베이지 각 5마" → items 2개: {color:"화이트",qty:5}, {color:"베이지",qty:5}
+- "1~4번 각 2마씩" → items 4개: {color:"1번",qty:2}, {color:"2번",qty:2}, {color:"3번",qty:2}, {color:"4번",qty:2}
+- 총수량이 아닌 개별 수량을 기준으로 파싱해라
 
 메모(note) 규칙:
 - 구조화된 필드(고객명, 전화번호, 주소, items, links)에 들어가지 않는 모든 원문 정보를 메모에 담아라
