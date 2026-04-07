@@ -807,7 +807,14 @@ function ErpApp() {
               <SecTitle>AI 주문 분석</SecTitle>
               <div style={{marginBottom:10}}>
                 <FLabel>Anthropic API Key</FLabel>
-                <input type="password" value={settings.anthropicKey||""} onChange={e=>setSettings(s=>({...s,anthropicKey:e.target.value}))} placeholder="sk-ant-..." style={{...baseInp,WebkitUserSelect:"none",userSelect:"none"}} onCopy={e=>e.preventDefault()} onCut={e=>e.preventDefault()} onDrag={e=>e.preventDefault()} onSelect={e=>{e.target.selectionStart=e.target.selectionEnd}} onContextMenu={e=>e.preventDefault()}/>
+                {settings.anthropicKey ? (
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <div style={{...baseInp,flex:1,cursor:"not-allowed",opacity:0.6,letterSpacing:3}}>••••••••••••••••</div>
+                    <GhostBtn small color={G.red} onClick={()=>setSettings(s=>({...s,anthropicKey:""}))}>초기화</GhostBtn>
+                  </div>
+                ) : (
+                  <input type="password" value="" onChange={e=>setSettings(s=>({...s,anthropicKey:e.target.value}))} placeholder="sk-ant-..." style={baseInp}/>
+                )}
               </div>
               <div style={{fontSize:11,color:G.creamMuted,lineHeight:1.5}}>AI 주문 분석 기능에 사용됩니다. 키는 브라우저에만 저장됩니다.</div>
             </Card>
